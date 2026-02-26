@@ -142,9 +142,14 @@ export class RelaySession {
         iterations,
       );
 
+      // Clear password from memory after hashing
+      this.password = '';
+
       this.connection.send(commands.init(hash));
       this.onAuthenticated();
     } catch (err) {
+      // Clear password from memory even on failure
+      this.password = '';
       const errorMessage =
         err instanceof Error ? err.message : 'Authentication failed';
       this.onError(errorMessage);
