@@ -191,5 +191,172 @@ describe('parseColors', () => {
       const segments = parseColors(text);
       expect(segments).toEqual([]);
     });
+
+    it('handles color code at end of string (truncated WeeChat color)', () => {
+      // 0x19 at the end with no subsequent color data
+      const text = 'hello\x19';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(1);
+      expect(segments[0].text).toBe('hello');
+    });
+
+    it('handles WeeChat color F with no digits following', () => {
+      const text = 'before\x19Fafter';
+      const segments = parseColors(text);
+      // F reads no color number, text resumes
+      const allText = segments.map((s) => s.text).join('');
+      expect(allText).toContain('before');
+    });
+
+    it('handles nested WeeChat color codes (color within color)', () => {
+      // Set fg=5 then change fg=12
+      const text = '\x19F05first\x19F12second';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(2);
+      expect(segments[0].text).toBe('first');
+      expect(segments[0].fgColor).toBeDefined();
+      expect(segments[1].text).toBe('second');
+      expect(segments[1].fgColor).toBeDefined();
+      // Colors should be different
+      expect(segments[0].fgColor).not.toBe(segments[1].fgColor);
+    });
+
+    it('handles IRC color code with no digits (bare 0x03)', () => {
+      // Bare 0x03 should just reset colors
+      const text = '\x034red\x03plain';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(2);
+      expect(segments[0].fgColor).toBeDefined();
+      expect(segments[1].text).toBe('plain');
+    });
+
+    it('handles all IRC color codes 0-15', () => {
+      for (let i = 0; i <= 15; i++) {
+        const code = i < 10 ? `\x030${i}` : `\x03${i}`;
+        const text = `${code}text`;
+        const segments = parseColors(text);
+        expect(segments).toHaveLength(1);
+        expect(segments[0].text).toBe('text');
+        expect(segments[0].fgColor).toBeDefined();
+      }
+    });
+
+    it('handles WeeChat extended color (@NNN)', () => {
+      // Extended color: @ prefix followed by up to 5 digits
+      const text = '\x19F@00100colored';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(1);
+      expect(segments[0].text).toBe('colored');
+      expect(segments[0].fgColor).toBeDefined();
+    });
+
+    it('handles multiple attribute toggles', () => {
+      // bold + italic + underline simultaneously
+      const text = '\x1A*\x1A/\x1A_styled\x1C';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(1);
+      expect(segments[0].text).toBe('styled');
+      expect(segments[0].bold).toBe(true);
+      expect(segments[0].italic).toBe(true);
+      expect(segments[0].underline).toBe(true);
+    });
+
+    it('handles WeeChat reset (0x1C) clearing all formatting', () => {
+      const text = '\x02\x1D\x19F05styled\x1Cplain';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(2);
+      expect(segments[0].text).toBe('styled');
+      expect(segments[0].bold).toBe(true);
+      expect(segments[0].italic).toBe(true);
+      expect(segments[0].fgColor).toBeDefined();
+      expect(segments[1]).toEqual({ text: 'plain' });
+    });
+
+    it('handles IRC reset (0x0F) clearing all formatting', () => {
+      const text = '\x02\x1D\x034bold italic red\x0Fplain';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(2);
+      expect(segments[0].bold).toBe(true);
+      expect(segments[0].italic).toBe(true);
+      expect(segments[0].fgColor).toBeDefined();
+      expect(segments[1]).toEqual({ text: 'plain' });
+    });
+
+    it('handles string with only WeeChat reset code', () => {
+      const segments = parseColors('\x1C');
+      expect(segments).toEqual([]);
+    });
+
+    it('handles string with only IRC reset code', () => {
+      const segments = parseColors('\x0F');
+      expect(segments).toEqual([]);
+    });
+
+    it('handles WeeChat fg~bg with extended colors', () => {
+      const text = '\x1905~03both colors';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(1);
+      expect(segments[0].text).toBe('both colors');
+      expect(segments[0].fgColor).toBeDefined();
+      expect(segments[0].bgColor).toBeDefined();
+    });
+
+    it('handles IRC color with fg,bg where bg is 2 digits', () => {
+      const text = '\x034,12colored';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(1);
+      expect(segments[0].fgColor).toBeDefined();
+      expect(segments[0].bgColor).toBeDefined();
+    });
+
+    it('preserves attributes when color changes', () => {
+      // Set bold, then change color - bold should persist
+      const text = '\x02\x19F05bold and colored\x19F12still bold new color';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(2);
+      expect(segments[0].bold).toBe(true);
+      expect(segments[0].fgColor).toBeDefined();
+      expect(segments[1].bold).toBe(true);
+      expect(segments[1].fgColor).toBeDefined();
+      expect(segments[0].fgColor).not.toBe(segments[1].fgColor);
+    });
+
+    it('handles mixed WeeChat and IRC color codes in same string', () => {
+      const text = '\x034irc red\x1Creset\x19F12wc blue';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(3);
+      expect(segments[0].fgColor).toBeDefined();
+      expect(segments[0].text).toBe('irc red');
+      expect(segments[1]).toEqual({ text: 'reset' });
+      expect(segments[2].fgColor).toBeDefined();
+      expect(segments[2].text).toBe('wc blue');
+    });
+
+    it('handles WeeChat bar color code (bF, bB, etc)', () => {
+      // Bar color codes should be skipped without producing text
+      const text = 'before\x19bFafter';
+      const segments = parseColors(text);
+      const allText = segments.map((s) => s.text).join('');
+      expect(allText).toBe('beforeafter');
+    });
+
+    it('handles WeeChat emphasis code (E)', () => {
+      const text = 'before\x19Eafter';
+      const segments = parseColors(text);
+      const allText = segments.map((s) => s.text).join('');
+      expect(allText).toBe('beforeafter');
+    });
+
+    it('handles rapid format toggles without text between', () => {
+      // Bold on, italic on, bold off, underline on, then text
+      const text = '\x02\x1D\x02\x1Fstyled';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(1);
+      expect(segments[0].text).toBe('styled');
+      // Bold toggled on then off
+      expect(segments[0].bold).toBeFalsy();
+      expect(segments[0].italic).toBe(true);
+      expect(segments[0].underline).toBe(true);
+    });
   });
 });
