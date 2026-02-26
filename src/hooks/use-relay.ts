@@ -12,21 +12,18 @@ export function useRelay() {
   const clearAllMessages = useMessageStore((s) => s.clearAll);
   const clearAllNicklists = useNicklistStore((s) => s.clearAll);
 
-  const connect = useCallback(
-    (settings: ConnectionSettings) => {
-      // Disconnect any existing session
-      if (sessionRef.current) {
-        sessionRef.current.disconnect();
-      }
+  const connect = useCallback((settings: ConnectionSettings) => {
+    // Disconnect any existing session
+    if (sessionRef.current) {
+      sessionRef.current.disconnect();
+    }
 
-      useConnectionStore.getState().setSettings(settings);
+    useConnectionStore.getState().setSettings(settings);
 
-      const session = new RelaySession();
-      sessionRef.current = session;
-      session.connect(settings.host, settings.port, settings.ssl, settings.password);
-    },
-    [],
-  );
+    const session = new RelaySession();
+    sessionRef.current = session;
+    session.connect(settings.host, settings.port, settings.ssl, settings.password);
+  }, []);
 
   const disconnect = useCallback(() => {
     if (sessionRef.current) {

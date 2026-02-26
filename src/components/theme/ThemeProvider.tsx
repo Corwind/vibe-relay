@@ -5,9 +5,7 @@ const DARK_MQ = '(prefers-color-scheme: dark)';
 
 export function ThemeProvider() {
   const theme = useSettingsStore((s) => s.theme);
-  const [systemDark, setSystemDark] = useState(
-    () => window.matchMedia(DARK_MQ).matches,
-  );
+  const [systemDark, setSystemDark] = useState(() => window.matchMedia(DARK_MQ).matches);
 
   useEffect(() => {
     const mql = window.matchMedia(DARK_MQ);
@@ -19,8 +17,7 @@ export function ThemeProvider() {
   }, []);
 
   useEffect(() => {
-    const isDark =
-      theme === 'dark' || (theme === 'system' && systemDark);
+    const isDark = theme === 'dark' || (theme === 'system' && systemDark);
 
     if (isDark) {
       document.documentElement.classList.add('dark');

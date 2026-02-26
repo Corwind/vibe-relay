@@ -63,10 +63,7 @@ export class BinaryBuilder {
   }
 
   writeTime(value: Date | number): this {
-    const timestamp =
-      typeof value === 'number'
-        ? value
-        : Math.floor(value.getTime() / 1000);
+    const timestamp = typeof value === 'number' ? value : Math.floor(value.getTime() / 1000);
     const digits = this.encoder.encode(String(timestamp));
     const buf = new Uint8Array(1 + digits.length);
     buf[0] = digits.length;
@@ -81,11 +78,7 @@ export class BinaryBuilder {
     return this;
   }
 
-  writeHashtable(
-    keyType: string,
-    valueType: string,
-    entries: [unknown, unknown][],
-  ): this {
+  writeHashtable(keyType: string, valueType: string, entries: [unknown, unknown][]): this {
     this.writeType(keyType);
     this.writeType(valueType);
     this.writeInt(entries.length);

@@ -192,9 +192,9 @@ describe('auth', () => {
     });
 
     it('throws on unsupported algorithm', async () => {
-      await expect(
-        computeHash('unknown' as HashAlgorithm, 'pass', 'aa', 'bb'),
-      ).rejects.toThrow('Unsupported algorithm');
+      await expect(computeHash('unknown' as HashAlgorithm, 'pass', 'aa', 'bb')).rejects.toThrow(
+        'Unsupported algorithm',
+      );
     });
 
     it('sha256: Unicode password produces valid hash', async () => {

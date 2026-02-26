@@ -24,7 +24,12 @@ interface FormErrors {
   password?: string;
 }
 
-export function ConnectDialog({ open, onOpenChange, onConnect, connectionError }: ConnectDialogProps) {
+export function ConnectDialog({
+  open,
+  onOpenChange,
+  onConnect,
+  connectionError,
+}: ConnectDialogProps) {
   const [host, setHost] = useState('');
   const [port, setPort] = useState('9001');
   const [password, setPassword] = useState('');

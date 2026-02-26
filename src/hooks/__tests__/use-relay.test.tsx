@@ -97,9 +97,11 @@ describe('useRelay', () => {
       highlight: false,
       displayed: true,
     });
-    useNicklistStore.getState().setNicklist('buf1', [
-      { name: 'nick1', prefix: '@', color: '', visible: true, group: '', level: 0 },
-    ]);
+    useNicklistStore
+      .getState()
+      .setNicklist('buf1', [
+        { name: 'nick1', prefix: '@', color: '', visible: true, group: '', level: 0 },
+      ]);
     useBufferStore.setState({
       buffers: { buf1: {} as never },
       activeBufferId: 'buf1',

@@ -10,19 +10,14 @@ import type {
   WeechatArray,
 } from '@/protocol/types';
 
-function makeHdataMessage(
-  id: string,
-  hdata: WeechatHdata,
-): ProtocolMessage {
+function makeHdataMessage(id: string, hdata: WeechatHdata): ProtocolMessage {
   return {
     id,
     objects: [{ type: 'hda', value: hdata }],
   };
 }
 
-function makeLocalVarsHtb(
-  vars: Record<string, string>,
-): WeechatHashtable {
+function makeLocalVarsHtb(vars: Record<string, string>): WeechatHashtable {
   const entries = new Map<unknown, unknown>();
   for (const [k, v] of Object.entries(vars)) {
     entries.set(k, v);
@@ -436,9 +431,7 @@ describe('event-handler', () => {
       };
 
       handleEvent(makeHdataMessage('_buffer_renamed', hdata));
-      expect(useBufferStore.getState().buffers['0xabc'].fullName).toBe(
-        'irc.libera.#new',
-      );
+      expect(useBufferStore.getState().buffers['0xabc'].fullName).toBe('irc.libera.#new');
       expect(useBufferStore.getState().buffers['0xabc'].shortName).toBe('#new');
     });
   });

@@ -33,9 +33,7 @@ describe('commands', () => {
 
     it('builds handshake with only algo', () => {
       const result = handshake({ password_hash_algo: 'sha256' });
-      expect(result).toBe(
-        '(handshake) handshake password_hash_algo=sha256\n',
-      );
+      expect(result).toBe('(handshake) handshake password_hash_algo=sha256\n');
     });
   });
 
@@ -45,9 +43,7 @@ describe('commands', () => {
     });
 
     it('builds init with totp', () => {
-      expect(init('mypassword', '123456')).toBe(
-        'init password=mypassword,totp=123456\n',
-      );
+      expect(init('mypassword', '123456')).toBe('init password=mypassword,totp=123456\n');
     });
   });
 
@@ -73,9 +69,7 @@ describe('commands', () => {
 
   describe('input', () => {
     it('builds input command', () => {
-      expect(input('core.weechat', '/help')).toBe(
-        'input core.weechat /help\n',
-      );
+      expect(input('core.weechat', '/help')).toBe('input core.weechat /help\n');
     });
   });
 
@@ -127,9 +121,7 @@ describe('commands', () => {
 
   describe('completion', () => {
     it('builds completion without data', () => {
-      expect(completion('core.weechat', 5)).toBe(
-        '(completion) completion core.weechat 5\n',
-      );
+      expect(completion('core.weechat', 5)).toBe('(completion) completion core.weechat 5\n');
     });
 
     it('builds completion with data', () => {

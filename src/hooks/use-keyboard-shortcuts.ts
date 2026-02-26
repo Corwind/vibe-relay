@@ -24,13 +24,12 @@ export function useKeyboardShortcuts({ onToggleSearch, onEscape }: KeyboardShort
 
       // Skip Alt shortcuts when typing in inputs (except Ctrl+K above which is global)
       const target = e.target as HTMLElement;
-      if (
-        target.tagName === 'TEXTAREA' &&
-        e.altKey
-      ) {
+      if (target.tagName === 'TEXTAREA' && e.altKey) {
         // Allow Alt shortcuts even in textarea
       } else if (
-        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT') &&
         !e.altKey
       ) {
         return;

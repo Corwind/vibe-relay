@@ -384,7 +384,6 @@ describe('BinaryParser', () => {
   // Edge case tests using the test helper BinaryBuilder (roundtrip tests)
   // =====================================================================
   describe('edge cases', () => {
-
     describe('int edge cases', () => {
       it('reads INT32_MAX (2147483647)', () => {
         const b = new TestBuilder();
@@ -456,9 +455,7 @@ describe('BinaryParser', () => {
       it('reads string with newlines and special characters', () => {
         const b = new TestBuilder();
         b.writeString('line1\nline2\ttab\r\nwindows');
-        expect(new BinaryParser(b.build()).readString()).toBe(
-          'line1\nline2\ttab\r\nwindows',
-        );
+        expect(new BinaryParser(b.build()).readString()).toBe('line1\nline2\ttab\r\nwindows');
       });
 
       it('reads multiple null and empty strings in sequence', () => {

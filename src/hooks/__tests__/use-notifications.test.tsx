@@ -43,7 +43,10 @@ describe('useNotifications', () => {
       result.current.notify('Test Title', { body: 'Test body' });
     });
 
-    expect(notificationSpy).toHaveBeenCalledWith('Test Title', expect.objectContaining({ body: 'Test body' }));
+    expect(notificationSpy).toHaveBeenCalledWith(
+      'Test Title',
+      expect.objectContaining({ body: 'Test body' }),
+    );
   });
 
   it('does not send notification when permission is denied', () => {

@@ -77,9 +77,7 @@ describe('RelayConnection', () => {
     });
 
     expect(FakeWebSocket.instances).toHaveLength(1);
-    expect(FakeWebSocket.instances[0].url).toBe(
-      'wss://example.com:9001/weechat',
-    );
+    expect(FakeWebSocket.instances[0].url).toBe('wss://example.com:9001/weechat');
     expect(FakeWebSocket.instances[0].binaryType).toBe('arraybuffer');
   });
 
@@ -94,9 +92,7 @@ describe('RelayConnection', () => {
       onError: vi.fn(),
     });
 
-    expect(FakeWebSocket.instances[0].url).toBe(
-      'ws://example.com:9001/weechat',
-    );
+    expect(FakeWebSocket.instances[0].url).toBe('ws://example.com:9001/weechat');
   });
 
   it('calls onOpen when WebSocket opens', () => {

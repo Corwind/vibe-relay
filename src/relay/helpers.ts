@@ -1,8 +1,6 @@
 import type { BufferType } from '@/lib/constants';
 
-export function inferBufferType(
-  localVariables: Record<string, string>,
-): BufferType {
+export function inferBufferType(localVariables: Record<string, string>): BufferType {
   const type = localVariables['type'];
   if (type === 'channel') return 'channel';
   if (type === 'private') return 'private';

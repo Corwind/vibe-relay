@@ -69,7 +69,9 @@ describe('RelaySession', () => {
     // Now simulate the handshake response
     // We need to get the connection instance and inject a message
     // The session's onMessage will process it
-    const connectionAny = (session as unknown as { connection: { _injectMessage: (msg: unknown) => void } }).connection;
+    const connectionAny = (
+      session as unknown as { connection: { _injectMessage: (msg: unknown) => void } }
+    ).connection;
 
     connectionAny._injectMessage({
       id: 'handshake',
@@ -89,7 +91,9 @@ describe('RelaySession', () => {
     // Wait for the async handleHandshake to complete
     await vi.waitFor(() => {
       // After auth, init command should have been sent
-      const initCalls = mockSend.mock.calls.filter((c: unknown[]) => (c[0] as string).startsWith('init'));
+      const initCalls = mockSend.mock.calls.filter((c: unknown[]) =>
+        (c[0] as string).startsWith('init'),
+      );
       expect(initCalls.length).toBe(1);
     });
 
@@ -112,7 +116,9 @@ describe('RelaySession', () => {
       expect(mockSend).toHaveBeenCalled();
     });
 
-    const connectionAny = (session as unknown as { connection: { _injectMessage: (msg: unknown) => void } }).connection;
+    const connectionAny = (
+      session as unknown as { connection: { _injectMessage: (msg: unknown) => void } }
+    ).connection;
 
     connectionAny._injectMessage({
       id: 'handshake',
@@ -144,7 +150,9 @@ describe('RelaySession', () => {
 
     session.disconnect();
 
-    const quitCalls = mockSend.mock.calls.filter((c: unknown[]) => (c[0] as string).includes('quit'));
+    const quitCalls = mockSend.mock.calls.filter((c: unknown[]) =>
+      (c[0] as string).includes('quit'),
+    );
     expect(quitCalls.length).toBe(1);
     expect(mockDisconnect).toHaveBeenCalled();
   });

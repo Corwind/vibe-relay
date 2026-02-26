@@ -67,9 +67,7 @@ describe('buffer-store', () => {
   });
 
   it('clears unread counts', () => {
-    useBufferStore
-      .getState()
-      .addBuffer(makeBuffer({ unreadCount: 5, highlightCount: 2 }));
+    useBufferStore.getState().addBuffer(makeBuffer({ unreadCount: 5, highlightCount: 2 }));
     useBufferStore.getState().clearUnread('ptr1');
     expect(useBufferStore.getState().buffers['ptr1'].unreadCount).toBe(0);
     expect(useBufferStore.getState().buffers['ptr1'].highlightCount).toBe(0);

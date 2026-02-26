@@ -38,10 +38,7 @@ export class RelayConnection {
       this.ws.onerror = null;
       this.ws.onmessage = null;
       this.ws.onopen = null;
-      if (
-        this.ws.readyState === WebSocket.OPEN ||
-        this.ws.readyState === WebSocket.CONNECTING
-      ) {
+      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
         this.ws.close(1000, 'Client disconnect');
       }
       this.ws = null;
@@ -80,8 +77,7 @@ export class RelayConnection {
             const message = parseMessage(event.data);
             this.options?.onMessage(message);
           } catch (err) {
-            const errorMessage =
-              err instanceof Error ? err.message : 'Failed to parse message';
+            const errorMessage = err instanceof Error ? err.message : 'Failed to parse message';
             this.options?.onError(errorMessage);
           }
         }
@@ -99,8 +95,7 @@ export class RelayConnection {
         this.options?.onError('WebSocket connection error');
       };
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to create WebSocket';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create WebSocket';
       this.options.onError(errorMessage);
     }
   }

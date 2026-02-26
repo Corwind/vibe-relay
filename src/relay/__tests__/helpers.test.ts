@@ -3,15 +3,11 @@ import { inferBufferType } from '../helpers';
 
 describe('inferBufferType', () => {
   it('returns channel for type=channel', () => {
-    expect(inferBufferType({ type: 'channel', plugin: 'irc' })).toBe(
-      'channel',
-    );
+    expect(inferBufferType({ type: 'channel', plugin: 'irc' })).toBe('channel');
   });
 
   it('returns private for type=private', () => {
-    expect(inferBufferType({ type: 'private', plugin: 'irc' })).toBe(
-      'private',
-    );
+    expect(inferBufferType({ type: 'private', plugin: 'irc' })).toBe('private');
   });
 
   it('returns server for type=server', () => {
@@ -19,9 +15,7 @@ describe('inferBufferType', () => {
   });
 
   it('returns server for core plugin', () => {
-    expect(inferBufferType({ plugin: 'core', name: 'weechat' })).toBe(
-      'server',
-    );
+    expect(inferBufferType({ plugin: 'core', name: 'weechat' })).toBe('server');
   });
 
   it('defaults to channel for unknown type', () => {

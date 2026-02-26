@@ -174,9 +174,7 @@ describe('parseMessage with binary fixtures', () => {
     expect(msg.objects[0].type).toBe('htb');
 
     const htb = msg.objects[0].value as { entries: Map<string, string> };
-    expect(htb.entries.get('password_hash_algo')).toBe(
-      'pbkdf2+sha512:sha512:sha256:plain',
-    );
+    expect(htb.entries.get('password_hash_algo')).toBe('pbkdf2+sha512:sha512:sha256:plain');
     expect(htb.entries.get('compression')).toBe('zstd:zlib:off');
     expect(htb.entries.get('nonce')).toBeDefined();
     expect(typeof htb.entries.get('nonce')).toBe('string');
@@ -264,9 +262,7 @@ describe('parseMessage with binary fixtures', () => {
     expect(hda.entries[0].values['name']).toBe('root');
 
     // Find the op nick
-    const opNick = hda.entries.find(
-      (e) => e.values['group'] === 0 && e.values['prefix'] === '@',
-    );
+    const opNick = hda.entries.find((e) => e.values['group'] === 0 && e.values['prefix'] === '@');
     expect(opNick).toBeDefined();
     expect(opNick!.values['name']).toBe('admin_nick');
 

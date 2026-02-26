@@ -8,10 +8,7 @@ export function useDocumentTitle() {
   const activeBufferId = useBufferStore((s) => s.activeBufferId);
 
   useEffect(() => {
-    const totalHighlights = Object.values(buffers).reduce(
-      (sum, b) => sum + b.highlightCount,
-      0,
-    );
+    const totalHighlights = Object.values(buffers).reduce((sum, b) => sum + b.highlightCount, 0);
 
     const activeBuffer = activeBufferId ? buffers[activeBufferId] : null;
     const parts: string[] = [];

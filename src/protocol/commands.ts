@@ -4,11 +4,9 @@ export function handshake(params: {
   totp?: boolean;
 }): string {
   const parts: string[] = [];
-  if (params.password_hash_algo)
-    parts.push(`password_hash_algo=${params.password_hash_algo}`);
+  if (params.password_hash_algo) parts.push(`password_hash_algo=${params.password_hash_algo}`);
   if (params.compression) parts.push(`compression=${params.compression}`);
-  if (params.totp !== undefined)
-    parts.push(`totp=${params.totp ? 'on' : 'off'}`);
+  if (params.totp !== undefined) parts.push(`totp=${params.totp ? 'on' : 'off'}`);
   return `(handshake) handshake ${parts.join(',')}\n`;
 }
 
@@ -58,11 +56,7 @@ export function ping(data?: string): string {
   return `ping${data ? ` ${data}` : ''}\n`;
 }
 
-export function completion(
-  buffer: string,
-  position: number,
-  data?: string,
-): string {
+export function completion(buffer: string, position: number, data?: string): string {
   return `(completion) completion ${buffer} ${position}${data ? ` ${data}` : ''}\n`;
 }
 

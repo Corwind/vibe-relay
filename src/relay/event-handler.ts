@@ -46,9 +46,7 @@ export function handleEvent(message: ProtocolMessage): void {
   }
 }
 
-function handleBufferList(
-  objects: ProtocolMessage['objects'],
-): void {
+function handleBufferList(objects: ProtocolMessage['objects']): void {
   for (const obj of objects) {
     if (obj.type !== 'hda') continue;
     const hdata = obj.value as WeechatHdata;
@@ -66,9 +64,7 @@ function handleBufferList(
   }
 }
 
-function handleBufferOpened(
-  objects: ProtocolMessage['objects'],
-): void {
+function handleBufferOpened(objects: ProtocolMessage['objects']): void {
   for (const obj of objects) {
     if (obj.type !== 'hda') continue;
     const hdata = obj.value as WeechatHdata;
@@ -81,9 +77,7 @@ function handleBufferOpened(
   }
 }
 
-function handleBufferClosed(
-  objects: ProtocolMessage['objects'],
-): void {
+function handleBufferClosed(objects: ProtocolMessage['objects']): void {
   for (const obj of objects) {
     if (obj.type !== 'hda') continue;
     const hdata = obj.value as WeechatHdata;
@@ -95,9 +89,7 @@ function handleBufferClosed(
   }
 }
 
-function handleBufferUpdate(
-  objects: ProtocolMessage['objects'],
-): void {
+function handleBufferUpdate(objects: ProtocolMessage['objects']): void {
   for (const obj of objects) {
     if (obj.type !== 'hda') continue;
     const hdata = obj.value as WeechatHdata;
@@ -107,27 +99,22 @@ function handleBufferUpdate(
       const pointer = entry.pointers[0];
       const partial: Partial<WeechatBuffer> = {};
 
-      if ('full_name' in entry.values)
-        partial.fullName = entry.values['full_name'] as string;
+      if ('full_name' in entry.values) partial.fullName = entry.values['full_name'] as string;
       if ('short_name' in entry.values)
         partial.shortName = (entry.values['short_name'] as string) ?? '';
-      if ('title' in entry.values)
-        partial.title = (entry.values['title'] as string) ?? '';
+      if ('title' in entry.values) partial.title = (entry.values['title'] as string) ?? '';
       if ('hidden' in entry.values) {
         // hidden is a chr type (number), but we update visibility via it
         // buffers don't have a hidden field in the store -- we can skip or map
       }
-      if ('number' in entry.values)
-        partial.number = entry.values['number'] as number;
+      if ('number' in entry.values) partial.number = entry.values['number'] as number;
 
       store.updateBuffer(pointer, partial);
     }
   }
 }
 
-function handleLineAdded(
-  objects: ProtocolMessage['objects'],
-): void {
+function handleLineAdded(objects: ProtocolMessage['objects']): void {
   for (const obj of objects) {
     if (obj.type !== 'hda') continue;
     const hdata = obj.value as WeechatHdata;
@@ -156,9 +143,7 @@ function handleLineAdded(
   }
 }
 
-function handleNicklist(
-  objects: ProtocolMessage['objects'],
-): void {
+function handleNicklist(objects: ProtocolMessage['objects']): void {
   for (const obj of objects) {
     if (obj.type !== 'hda') continue;
     const hdata = obj.value as WeechatHdata;
@@ -182,18 +167,13 @@ function handleNicklist(
   }
 }
 
-function handleNicklistDiff(
-  objects: ProtocolMessage['objects'],
-): void {
+function handleNicklistDiff(objects: ProtocolMessage['objects']): void {
   for (const obj of objects) {
     if (obj.type !== 'hda') continue;
     const hdata = obj.value as WeechatHdata;
 
     // Group diffs by buffer pointer
-    const byBuffer = new Map<
-      string,
-      Array<{ op: '+' | '-' | '*'; nick: NickEntry }>
-    >();
+    const byBuffer = new Map<string, Array<{ op: '+' | '-' | '*'; nick: NickEntry }>>();
 
     for (const entry of hdata.entries) {
       const pointer = entry.pointers[0];
@@ -203,8 +183,7 @@ function handleNicklistDiff(
       // Skip group diffs
       if (isGroup) continue;
 
-      const op =
-        diffChar === 43 ? '+' : diffChar === 45 ? '-' : '*';
+      const op = diffChar === 43 ? '+' : diffChar === 45 ? '-' : '*';
 
       const nick = hdataEntryToNick(entry);
       const list = byBuffer.get(pointer) ?? [];
@@ -219,12 +198,8 @@ function handleNicklistDiff(
   }
 }
 
-function hdataEntryToBuffer(
-  entry: WeechatHdata['entries'][0],
-): WeechatBuffer {
-  const localVarsRaw = entry.values['local_variables'] as
-    | WeechatHashtable
-    | undefined;
+function hdataEntryToBuffer(entry: WeechatHdata['entries'][0]): WeechatBuffer {
+  const localVarsRaw = entry.values['local_variables'] as WeechatHashtable | undefined;
   const localVariables: Record<string, string> = {};
   if (localVarsRaw) {
     for (const [k, v] of localVarsRaw.entries) {
@@ -257,16 +232,15 @@ function hdataEntryToMessage(
   bufferPointer: string,
 ): WeechatMessage {
   const tagsArray = entry.values['tags_array'] as WeechatArray | undefined;
-  const tags: string[] = tagsArray
-    ? (tagsArray.values as string[])
-    : [];
+  const tags: string[] = tagsArray ? (tagsArray.values as string[]) : [];
 
   return {
     id: `${bufferPointer}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     bufferId: bufferPointer,
-    date: entry.values['date'] instanceof Date
-      ? (entry.values['date'] as Date)
-      : new Date((entry.values['date'] as number) * 1000),
+    date:
+      entry.values['date'] instanceof Date
+        ? (entry.values['date'] as Date)
+        : new Date((entry.values['date'] as number) * 1000),
     prefix: (entry.values['prefix'] as string) ?? '',
     message: (entry.values['message'] as string) ?? '',
     tags,
@@ -275,16 +249,14 @@ function hdataEntryToMessage(
   };
 }
 
-function hdataEntryToNick(
-  entry: WeechatHdata['entries'][0],
-): NickEntry {
+function hdataEntryToNick(entry: WeechatHdata['entries'][0]): NickEntry {
   const isGroup = (entry.values['group'] as number) !== 0;
   return {
     name: (entry.values['name'] as string) ?? '',
     prefix: (entry.values['prefix'] as string) ?? '',
     color: (entry.values['color'] as string) ?? '',
     visible: (entry.values['visible'] as number) !== 0,
-    group: isGroup ? (entry.values['name'] as string) ?? '' : '',
+    group: isGroup ? ((entry.values['name'] as string) ?? '') : '',
     level: (entry.values['level'] as number) ?? 0,
   };
 }

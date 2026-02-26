@@ -107,9 +107,4 @@ export type ConnectionStatus =
 
 export type CompressionType = 'off' | 'zlib' | 'zstd';
 
-export type HashAlgorithm =
-  | 'plain'
-  | 'sha256'
-  | 'sha512'
-  | 'pbkdf2+sha256'
-  | 'pbkdf2+sha512';
+export type HashAlgorithm = 'plain' | 'sha256' | 'sha512' | 'pbkdf2+sha256' | 'pbkdf2+sha512';

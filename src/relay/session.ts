@@ -6,13 +6,7 @@ import type { WeechatMessage, WeechatHashtable, HashAlgorithm } from '@/protocol
 import { useConnectionStore } from '@/store/connection-store';
 
 const PING_INTERVAL = 30000;
-const ALGO_PREFERENCE = [
-  'pbkdf2+sha512',
-  'pbkdf2+sha256',
-  'sha512',
-  'sha256',
-  'plain',
-] as const;
+const ALGO_PREFERENCE = ['pbkdf2+sha512', 'pbkdf2+sha256', 'sha512', 'sha256', 'plain'] as const;
 
 export class RelaySession {
   private connection: RelayConnection;
@@ -54,19 +48,16 @@ export class RelaySession {
 
   fetchLines(bufferPointer: string, count = 100): void {
     this.connection.send(
-      commands.hdata(
-        `buffer:${bufferPointer}/own_lines/last_line(-${count})/data`,
-        [
-          'buffer',
-          'date',
-          'prefix',
-          'message',
-          'highlight',
-          'tags_array',
-          'displayed',
-          'notify',
-        ],
-      ),
+      commands.hdata(`buffer:${bufferPointer}/own_lines/last_line(-${count})/data`, [
+        'buffer',
+        'date',
+        'prefix',
+        'message',
+        'highlight',
+        'tags_array',
+        'displayed',
+        'notify',
+      ]),
     );
   }
 
@@ -115,9 +106,7 @@ export class RelaySession {
     }
 
     const htb = obj.value as WeechatHashtable;
-    const serverAlgo = htb.entries.get('password_hash_algo') as
-      | string
-      | undefined;
+    const serverAlgo = htb.entries.get('password_hash_algo') as string | undefined;
     const serverNonce = htb.entries.get('nonce') as string | undefined;
 
     if (!serverNonce) {
@@ -150,15 +139,12 @@ export class RelaySession {
     } catch (err) {
       // Clear password from memory even on failure
       this.password = '';
-      const errorMessage =
-        err instanceof Error ? err.message : 'Authentication failed';
+      const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
       this.onError(errorMessage);
     }
   }
 
-  private selectAlgorithm(
-    serverAlgos: string,
-  ): HashAlgorithm | null {
+  private selectAlgorithm(serverAlgos: string): HashAlgorithm | null {
     const available = serverAlgos.split(':');
     for (const preferred of ALGO_PREFERENCE) {
       if (available.includes(preferred)) {
@@ -194,9 +180,7 @@ export class RelaySession {
   private onClose(code: number, reason: string): void {
     this.stopPing();
     if (code !== 1000) {
-      useConnectionStore
-        .getState()
-        .setError(`Connection closed: ${reason || `code ${code}`}`);
+      useConnectionStore.getState().setError(`Connection closed: ${reason || `code ${code}`}`);
     } else {
       useConnectionStore.getState().reset();
     }

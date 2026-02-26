@@ -63,14 +63,10 @@ describe('message-store', () => {
       msgs.push(makeMessage(String(i)));
     }
     useMessageStore.getState().addMessages('buf1', msgs);
-    expect(useMessageStore.getState().messages['buf1']).toHaveLength(
-      MAX_MESSAGES_PER_BUFFER,
-    );
+    expect(useMessageStore.getState().messages['buf1']).toHaveLength(MAX_MESSAGES_PER_BUFFER);
 
     // Adding one more should still be at the limit
-    useMessageStore
-      .getState()
-      .addMessage('buf1', makeMessage('overflow'));
+    useMessageStore.getState().addMessage('buf1', makeMessage('overflow'));
     const result = useMessageStore.getState().messages['buf1'];
     expect(result).toHaveLength(MAX_MESSAGES_PER_BUFFER);
     // The first message should have been trimmed
@@ -86,9 +82,7 @@ describe('message-store', () => {
     useMessageStore.getState().addMessages('buf1', msgs);
 
     // Prepend should trim from the start (keeping end) after combining
-    useMessageStore
-      .getState()
-      .prependMessages('buf1', [makeMessage('prepend')]);
+    useMessageStore.getState().prependMessages('buf1', [makeMessage('prepend')]);
     const result = useMessageStore.getState().messages['buf1'];
     expect(result).toHaveLength(MAX_MESSAGES_PER_BUFFER);
   });

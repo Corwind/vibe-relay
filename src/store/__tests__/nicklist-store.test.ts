@@ -30,21 +30,15 @@ describe('nicklist-store', () => {
 
   it('applies add diff', () => {
     useNicklistStore.getState().setNicklist('buf1', [makeNick('alice')]);
-    useNicklistStore.getState().applyDiff('buf1', [
-      { op: '+', nick: makeNick('bob') },
-    ]);
+    useNicklistStore.getState().applyDiff('buf1', [{ op: '+', nick: makeNick('bob') }]);
     const nicks = useNicklistStore.getState().nicklists['buf1'];
     expect(nicks).toHaveLength(2);
     expect(nicks[1].name).toBe('bob');
   });
 
   it('applies remove diff', () => {
-    useNicklistStore
-      .getState()
-      .setNicklist('buf1', [makeNick('alice'), makeNick('bob')]);
-    useNicklistStore.getState().applyDiff('buf1', [
-      { op: '-', nick: makeNick('alice') },
-    ]);
+    useNicklistStore.getState().setNicklist('buf1', [makeNick('alice'), makeNick('bob')]);
+    useNicklistStore.getState().applyDiff('buf1', [{ op: '-', nick: makeNick('alice') }]);
     const nicks = useNicklistStore.getState().nicklists['buf1'];
     expect(nicks).toHaveLength(1);
     expect(nicks[0].name).toBe('bob');
@@ -52,9 +46,9 @@ describe('nicklist-store', () => {
 
   it('applies update diff', () => {
     useNicklistStore.getState().setNicklist('buf1', [makeNick('alice')]);
-    useNicklistStore.getState().applyDiff('buf1', [
-      { op: '*', nick: { ...makeNick('alice'), prefix: '@' } },
-    ]);
+    useNicklistStore
+      .getState()
+      .applyDiff('buf1', [{ op: '*', nick: { ...makeNick('alice'), prefix: '@' } }]);
     const nicks = useNicklistStore.getState().nicklists['buf1'];
     expect(nicks[0].prefix).toBe('@');
   });
@@ -73,16 +67,12 @@ describe('nicklist-store', () => {
 
   it('handles remove of non-existent nick gracefully', () => {
     useNicklistStore.getState().setNicklist('buf1', [makeNick('alice')]);
-    useNicklistStore.getState().applyDiff('buf1', [
-      { op: '-', nick: makeNick('ghost') },
-    ]);
+    useNicklistStore.getState().applyDiff('buf1', [{ op: '-', nick: makeNick('ghost') }]);
     expect(useNicklistStore.getState().nicklists['buf1']).toHaveLength(1);
   });
 
   it('handles diff on empty buffer', () => {
-    useNicklistStore.getState().applyDiff('buf1', [
-      { op: '+', nick: makeNick('alice') },
-    ]);
+    useNicklistStore.getState().applyDiff('buf1', [{ op: '+', nick: makeNick('alice') }]);
     expect(useNicklistStore.getState().nicklists['buf1']).toHaveLength(1);
   });
 
