@@ -8,12 +8,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { ConnectionError } from './ConnectionError';
 import type { ConnectionSettings } from '@/store/types';
 
 interface ConnectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConnect: (settings: ConnectionSettings) => void;
+  connectionError?: string | null;
 }
 
 interface FormErrors {
@@ -22,7 +24,7 @@ interface FormErrors {
   password?: string;
 }
 
-export function ConnectDialog({ open, onOpenChange, onConnect }: ConnectDialogProps) {
+export function ConnectDialog({ open, onOpenChange, onConnect, connectionError }: ConnectDialogProps) {
   const [host, setHost] = useState('');
   const [port, setPort] = useState('9001');
   const [password, setPassword] = useState('');
@@ -134,6 +136,8 @@ export function ConnectDialog({ open, onOpenChange, onConnect }: ConnectDialogPr
               Use SSL/TLS
             </label>
           </div>
+
+          <ConnectionError error={connectionError ?? null} />
 
           <DialogFooter>
             <Button type="submit" data-testid="connect-button">

@@ -15,6 +15,7 @@ import { useBufferStore } from '@/store/buffer-store';
 import { useMessageStore } from '@/store/message-store';
 import { useRelay } from '@/hooks/use-relay';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
+import { useDocumentTitle } from '@/hooks/use-document-title';
 import type { ConnectionSettings } from '@/store/types';
 
 export function AppLayout() {
@@ -25,12 +26,19 @@ export function AppLayout() {
   const [nicklistOpen, setNicklistOpen] = useState(false);
 
   const connectionState = useConnectionStore((s) => s.state);
+  const connectionError = useConnectionStore((s) => s.error);
   const activeBufferId = useBufferStore((s) => s.activeBufferId);
   const activeBuffer = useBufferStore((s) =>
     s.activeBufferId ? s.buffers[s.activeBufferId] : null,
   );
 
   const { connect, disconnect, sendInput, fetchLines, fetchNicklist } = useRelay();
+
+  useDocumentTitle();
+
+  // Dialog is open when manually triggered OR when there's a connection error
+  const connectDialogOpen =
+    connectOpen || (connectionState === 'disconnected' && !!connectionError);
 
   const handleToggleSearch = useCallback(() => {
     setSearchFocused((prev) => !prev);
@@ -64,6 +72,12 @@ export function AppLayout() {
     },
     [activeBufferId, sendInput],
   );
+
+  // Load older messages when user scrolls to top
+  const handleStartReached = useCallback(() => {
+    if (!activeBufferId || connectionState !== 'connected') return;
+    fetchLines(activeBufferId, 200);
+  }, [activeBufferId, connectionState, fetchLines]);
 
   // Fetch backlog + nicklist when switching buffers
   const prevBufferRef = useRef<string | null>(null);
@@ -135,7 +149,7 @@ export function AppLayout() {
             </div>
           )}
           <div className="flex-1 overflow-hidden">
-            <MessageList />
+            <MessageList onStartReached={handleStartReached} />
           </div>
           <MessageInput
             onSend={handleSend}
@@ -180,7 +194,7 @@ export function AppLayout() {
           </Sheet>
         </div>
         <div className="flex-1 overflow-hidden">
-          <MessageList />
+          <MessageList onStartReached={handleStartReached} />
         </div>
         <MessageInput
           onSend={handleSend}
@@ -189,7 +203,15 @@ export function AppLayout() {
       </div>
 
       {/* Dialogs */}
-      <ConnectDialog open={connectOpen} onOpenChange={setConnectOpen} onConnect={handleConnect} />
+      <ConnectDialog
+        open={connectDialogOpen}
+        onOpenChange={(open) => {
+          setConnectOpen(open);
+          if (!open) useConnectionStore.getState().setError(null);
+        }}
+        onConnect={handleConnect}
+        connectionError={connectionError}
+      />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );

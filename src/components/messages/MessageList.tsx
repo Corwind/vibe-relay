@@ -30,7 +30,11 @@ function buildItems(messages: WeechatMessage[]): ListItem[] {
   return items;
 }
 
-export const MessageList = memo(function MessageList() {
+interface MessageListProps {
+  onStartReached?: () => void;
+}
+
+export const MessageList = memo(function MessageList({ onStartReached }: MessageListProps) {
   const messages = useMessages();
   const virtuosoRef = useRef<VirtuosoHandle>(null);
 
@@ -56,6 +60,7 @@ export const MessageList = memo(function MessageList() {
       ref={virtuosoRef}
       data={items}
       itemContent={renderItem}
+      startReached={onStartReached}
       followOutput="smooth"
       alignToBottom
       className="h-full"
