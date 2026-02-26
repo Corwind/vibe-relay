@@ -1,7 +1,7 @@
 import type { FormattedSegment } from './types';
 
 // Standard WeeChat colors (0-15)
-const WEECHAT_BASIC_COLORS: Record<number, string> = {
+export const WEECHAT_BASIC_COLORS: Record<number, string> = {
   0: '#000000', // default (black)
   1: '#000000', // black
   2: '#800000', // dark gray (dark red)
@@ -21,7 +21,7 @@ const WEECHAT_BASIC_COLORS: Record<number, string> = {
 };
 
 // IRC mIRC colors (0-15)
-const IRC_COLORS: Record<number, string> = {
+export const IRC_COLORS: Record<number, string> = {
   0: '#ffffff', // white
   1: '#000000', // black
   2: '#00007f', // blue (navy)
@@ -41,7 +41,7 @@ const IRC_COLORS: Record<number, string> = {
 };
 
 // xterm-256 extended colors (16-255)
-function xterm256Color(n: number): string {
+export function xterm256Color(n: number): string {
   if (n < 16) return WEECHAT_BASIC_COLORS[n] ?? '#ffffff';
   if (n < 232) {
     // 6x6x6 color cube
@@ -49,8 +49,7 @@ function xterm256Color(n: number): string {
     const r = Math.floor(idx / 36);
     const g = Math.floor((idx % 36) / 6);
     const b = idx % 6;
-    const toHex = (v: number) =>
-      (v === 0 ? 0 : 55 + v * 40).toString(16).padStart(2, '0');
+    const toHex = (v: number) => (v === 0 ? 0 : 55 + v * 40).toString(16).padStart(2, '0');
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
   }
   // Grayscale ramp 232-255
@@ -134,11 +133,7 @@ function readColorNumber(text: string, pos: number): [number, number] {
   return [num, pos];
 }
 
-function parseWeechatColorSequence(
-  text: string,
-  pos: number,
-  state: FormatState,
-): number {
+function parseWeechatColorSequence(text: string, pos: number, state: FormatState): number {
   if (pos >= text.length) return pos;
 
   const ch = text[pos];
@@ -219,7 +214,7 @@ function parseWeechatColorSequence(
   }
 
   // Reset
-  if (ch === 0x1c.toString() || text.charCodeAt(pos) === 0x1c) {
+  if (ch === (0x1c).toString() || text.charCodeAt(pos) === 0x1c) {
     state.fg = undefined;
     state.bg = undefined;
     state.bold = false;
@@ -233,11 +228,7 @@ function parseWeechatColorSequence(
   return pos;
 }
 
-function parseIrcColorSequence(
-  text: string,
-  pos: number,
-  state: FormatState,
-): number {
+function parseIrcColorSequence(text: string, pos: number, state: FormatState): number {
   // After 0x03: optional fg[,bg] where each is 1-2 digits
   let fgStr = '';
   while (pos < text.length && isDigit(text[pos]) && fgStr.length < 2) {

@@ -43,18 +43,15 @@ export async function computeHash(
     const shaLabel = algorithm === 'pbkdf2+sha256' ? 'sha256' : 'sha512';
     const iterCount = iterations ?? 100000;
 
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      passwordBytes,
-      'PBKDF2',
-      false,
-      ['deriveBits'],
-    );
+    const keyMaterial = await crypto.subtle.importKey('raw', passwordBytes, 'PBKDF2', false, [
+      'deriveBits',
+    ]);
 
+    // WeeChat relay protocol expects 256-bit derived keys regardless of SHA variant
     const derivedBits = await crypto.subtle.deriveBits(
       {
         name: 'PBKDF2',
-        salt,
+        salt: salt.buffer as ArrayBuffer,
         iterations: iterCount,
         hash: shaAlgo,
       },

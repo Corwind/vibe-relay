@@ -13,14 +13,14 @@ export function parseMessage(data: ArrayBuffer): WeechatMessage {
   } else if (compression === 1) {
     const compressed = new Uint8Array(data, 5);
     const decompressed = decompressZlib(compressed);
-    payload = decompressed.buffer.slice(
+    payload = (decompressed.buffer as ArrayBuffer).slice(
       decompressed.byteOffset,
       decompressed.byteOffset + decompressed.byteLength,
     );
   } else if (compression === 2) {
     const compressed = new Uint8Array(data, 5);
     const decompressed = decompressZstd(compressed);
-    payload = decompressed.buffer.slice(
+    payload = (decompressed.buffer as ArrayBuffer).slice(
       decompressed.byteOffset,
       decompressed.byteOffset + decompressed.byteLength,
     );

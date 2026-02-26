@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { BinaryParser } from '../binary-parser';
+import { BinaryBuilder as TestBuilder } from '@/test/helpers/binary-builder';
 
 // Helper: build an ArrayBuffer from a sequence of operations
 class BinaryBuilder {
@@ -300,10 +301,7 @@ describe('BinaryParser', () => {
 
   describe('readInfo', () => {
     it('reads an info pair', () => {
-      const buf = new BinaryBuilder()
-        .writeString('version')
-        .writeString('4.0.0')
-        .build();
+      const buf = new BinaryBuilder().writeString('version').writeString('4.0.0').build();
       const parser = new BinaryParser(buf);
       const result = parser.readInfo();
       expect(result).toEqual({ key: 'version', value: '4.0.0' });
@@ -341,10 +339,7 @@ describe('BinaryParser', () => {
     });
 
     it('reads a typed object (str)', () => {
-      const buf = new BinaryBuilder()
-        .writeType('str')
-        .writeString('test')
-        .build();
+      const buf = new BinaryBuilder().writeType('str').writeString('test').build();
       const parser = new BinaryParser(buf);
       const obj = parser.readObject();
       expect(obj.type).toBe('str');
@@ -354,11 +349,7 @@ describe('BinaryParser', () => {
 
   describe('sequential reads', () => {
     it('reads multiple values in sequence', () => {
-      const buf = new BinaryBuilder()
-        .writeInt(42)
-        .writeString('hello')
-        .writePointer('ff')
-        .build();
+      const buf = new BinaryBuilder().writeInt(42).writeString('hello').writePointer('ff').build();
       const parser = new BinaryParser(buf);
       expect(parser.readInt()).toBe(42);
       expect(parser.readString()).toBe('hello');
@@ -383,12 +374,330 @@ describe('BinaryParser', () => {
 
   describe('offset constructor parameter', () => {
     it('starts reading from given offset', () => {
-      const buf = new BinaryBuilder()
-        .writeInt(999)
-        .writeInt(42)
-        .build();
+      const buf = new BinaryBuilder().writeInt(999).writeInt(42).build();
       const parser = new BinaryParser(buf, 4);
       expect(parser.readInt()).toBe(42);
+    });
+  });
+
+  // =====================================================================
+  // Edge case tests using the test helper BinaryBuilder (roundtrip tests)
+  // =====================================================================
+  describe('edge cases', () => {
+
+    describe('int edge cases', () => {
+      it('reads INT32_MAX (2147483647)', () => {
+        const b = new TestBuilder();
+        b.writeInt(2147483647);
+        expect(new BinaryParser(b.build()).readInt()).toBe(2147483647);
+      });
+
+      it('reads INT32_MIN (-2147483648)', () => {
+        const b = new TestBuilder();
+        b.writeInt(-2147483648);
+        expect(new BinaryParser(b.build()).readInt()).toBe(-2147483648);
+      });
+
+      it('reads -1', () => {
+        const b = new TestBuilder();
+        b.writeInt(-1);
+        expect(new BinaryParser(b.build()).readInt()).toBe(-1);
+      });
+    });
+
+    describe('char edge cases', () => {
+      it('reads max signed char (127)', () => {
+        const b = new TestBuilder();
+        b.writeChar(127);
+        expect(new BinaryParser(b.build()).readChar()).toBe(127);
+      });
+
+      it('reads min signed char (-128)', () => {
+        const b = new TestBuilder();
+        b.writeChar(-128);
+        expect(new BinaryParser(b.build()).readChar()).toBe(-128);
+      });
+    });
+
+    describe('long edge cases', () => {
+      it('reads negative long', () => {
+        const b = new TestBuilder();
+        b.writeLong('-9999999999');
+        expect(new BinaryParser(b.build()).readLong()).toBe('-9999999999');
+      });
+
+      it('reads single digit long', () => {
+        const b = new TestBuilder();
+        b.writeLong('0');
+        expect(new BinaryParser(b.build()).readLong()).toBe('0');
+      });
+
+      it('reads very large long', () => {
+        const b = new TestBuilder();
+        b.writeLong('9223372036854775807');
+        expect(new BinaryParser(b.build()).readLong()).toBe('9223372036854775807');
+      });
+    });
+
+    describe('string edge cases', () => {
+      it('reads max-length-ish string (10000 chars)', () => {
+        const longStr = 'A'.repeat(10000);
+        const b = new TestBuilder();
+        b.writeString(longStr);
+        expect(new BinaryParser(b.build()).readString()).toBe(longStr);
+      });
+
+      it('reads string with multibyte UTF-8 (emoji)', () => {
+        const b = new TestBuilder();
+        b.writeString('\u{1F600}\u{1F4A9}');
+        expect(new BinaryParser(b.build()).readString()).toBe('\u{1F600}\u{1F4A9}');
+      });
+
+      it('reads string with newlines and special characters', () => {
+        const b = new TestBuilder();
+        b.writeString('line1\nline2\ttab\r\nwindows');
+        expect(new BinaryParser(b.build()).readString()).toBe(
+          'line1\nline2\ttab\r\nwindows',
+        );
+      });
+
+      it('reads multiple null and empty strings in sequence', () => {
+        const b = new TestBuilder();
+        b.writeString(null).writeString('').writeString(null).writeString('end');
+        const p = new BinaryParser(b.build());
+        expect(p.readString()).toBeNull();
+        expect(p.readString()).toBe('');
+        expect(p.readString()).toBeNull();
+        expect(p.readString()).toBe('end');
+      });
+    });
+
+    describe('buffer edge cases', () => {
+      it('reads buffer with all byte values (0-255)', () => {
+        const bytes = new Uint8Array(256);
+        for (let i = 0; i < 256; i++) bytes[i] = i;
+        const b = new TestBuilder();
+        b.writeBuffer(bytes);
+        const result = new BinaryParser(b.build()).readBuffer();
+        expect(result).toEqual(bytes);
+      });
+
+      it('reads null buffer followed by non-null buffer', () => {
+        const b = new TestBuilder();
+        b.writeBuffer(null).writeBuffer(new Uint8Array([42]));
+        const p = new BinaryParser(b.build());
+        expect(p.readBuffer()).toBeNull();
+        expect(p.readBuffer()).toEqual(new Uint8Array([42]));
+      });
+    });
+
+    describe('pointer edge cases', () => {
+      it('reads null pointer (0x0)', () => {
+        const b = new TestBuilder();
+        b.writePointer('0x0');
+        expect(new BinaryParser(b.build()).readPointer()).toBe('0x0');
+      });
+
+      it('reads long pointer', () => {
+        const b = new TestBuilder();
+        b.writePointer('0x7ffeabcdef12');
+        expect(new BinaryParser(b.build()).readPointer()).toBe('0x7ffeabcdef12');
+      });
+    });
+
+    describe('time edge cases', () => {
+      it('reads epoch zero', () => {
+        const b = new TestBuilder();
+        b.writeTime(0);
+        const date = new BinaryParser(b.build()).readTime();
+        expect(date.getTime()).toBe(0);
+      });
+
+      it('reads recent timestamp', () => {
+        const ts = 1740000000;
+        const b = new TestBuilder();
+        b.writeTime(ts);
+        const date = new BinaryParser(b.build()).readTime();
+        expect(date.getTime()).toBe(ts * 1000);
+      });
+    });
+
+    describe('hashtable edge cases', () => {
+      it('reads empty hashtable (0 entries)', () => {
+        const b = new TestBuilder();
+        b.writeType('htb');
+        b.writeHashtable('str', 'str', []);
+        const p = new BinaryParser(b.build());
+        p.readType();
+        const htb = p.readHashtable();
+        expect(htb.entries.size).toBe(0);
+      });
+
+      it('reads hashtable with int keys and pointer values', () => {
+        const b = new TestBuilder();
+        b.writeType('htb');
+        b.writeHashtable('int', 'ptr', [
+          [1, '0xabc'],
+          [2, '0xdef'],
+        ]);
+        const p = new BinaryParser(b.build());
+        p.readType();
+        const htb = p.readHashtable();
+        expect(htb.entries.get(1)).toBe('0xabc');
+        expect(htb.entries.get(2)).toBe('0xdef');
+      });
+    });
+
+    describe('array edge cases', () => {
+      it('reads empty array (0 elements)', () => {
+        const b = new TestBuilder();
+        b.writeType('arr');
+        b.writeArray('str', []);
+        const p = new BinaryParser(b.build());
+        p.readType();
+        const arr = p.readArray();
+        expect(arr.values).toEqual([]);
+      });
+
+      it('reads array of pointers', () => {
+        const b = new TestBuilder();
+        b.writeType('arr');
+        b.writeArray('ptr', ['0xaaa', '0xbbb']);
+        const p = new BinaryParser(b.build());
+        p.readType();
+        const arr = p.readArray();
+        expect(arr.type).toBe('ptr');
+        expect(arr.values).toEqual(['0xaaa', '0xbbb']);
+      });
+    });
+
+    describe('hdata edge cases', () => {
+      it('reads hdata with 0 entries', () => {
+        const b = new TestBuilder();
+        b.writeType('hda');
+        b.writeHdata('buffer', [{ name: 'number', type: 'int' }], []);
+        const p = new BinaryParser(b.build());
+        p.readType();
+        const hda = p.readHdata();
+        expect(hda.path).toBe('buffer');
+        expect(hda.entries).toEqual([]);
+      });
+
+      it('reads hdata with many key types', () => {
+        const b = new TestBuilder();
+        b.writeType('hda');
+        b.writeHdata(
+          'buffer',
+          [
+            { name: 'num', type: 'int' },
+            { name: 'name', type: 'str' },
+            { name: 'ptr', type: 'ptr' },
+            { name: 'flag', type: 'chr' },
+          ],
+          [
+            {
+              pointers: ['0x123'],
+              values: [42, 'test', '0xabc', 1],
+            },
+          ],
+        );
+        const p = new BinaryParser(b.build());
+        p.readType();
+        const hda = p.readHdata();
+        expect(hda.entries[0].values).toEqual({
+          num: 42,
+          name: 'test',
+          ptr: '0xabc',
+          flag: 1,
+        });
+      });
+
+      it('reads hdata with 4 path segments', () => {
+        const b = new TestBuilder();
+        b.writeType('hda');
+        b.writeHdata(
+          'a/b/c/d',
+          [{ name: 'val', type: 'int' }],
+          [
+            {
+              pointers: ['0x1', '0x2', '0x3', '0x4'],
+              values: [99],
+            },
+          ],
+        );
+        const p = new BinaryParser(b.build());
+        p.readType();
+        const hda = p.readHdata();
+        expect(hda.entries[0].pointers).toHaveLength(4);
+      });
+    });
+
+    describe('infolist edge cases', () => {
+      it('reads infolist with nested pointer and time types', () => {
+        const b = new TestBuilder();
+        b.writeType('inl');
+        b.writeInfolist('test', [
+          {
+            ptr_field: { type: 'ptr', value: '0xdeadbeef' },
+            time_field: { type: 'tim', value: 1700000000 },
+            int_field: { type: 'int', value: -1 },
+          },
+        ]);
+        const p = new BinaryParser(b.build());
+        p.readType();
+        const inl = p.readInfolist();
+        expect(inl.items[0]['ptr_field']).toBe('0xdeadbeef');
+        expect((inl.items[0]['time_field'] as Date).getTime()).toBe(1700000000 * 1000);
+        expect(inl.items[0]['int_field']).toBe(-1);
+      });
+
+      it('reads infolist with 0 items', () => {
+        const b = new TestBuilder();
+        b.writeType('inl');
+        b.writeInfolist('empty', []);
+        const p = new BinaryParser(b.build());
+        p.readType();
+        const inl = p.readInfolist();
+        expect(inl.name).toBe('empty');
+        expect(inl.items).toEqual([]);
+      });
+
+      it('reads infolist with multiple items', () => {
+        const b = new TestBuilder();
+        b.writeType('inl');
+        b.writeInfolist('multi', [
+          { name: { type: 'str', value: 'first' } },
+          { name: { type: 'str', value: 'second' } },
+          { name: { type: 'str', value: 'third' } },
+        ]);
+        const p = new BinaryParser(b.build());
+        p.readType();
+        const inl = p.readInfolist();
+        expect(inl.items).toHaveLength(3);
+        expect(inl.items.map((i) => i['name'])).toEqual(['first', 'second', 'third']);
+      });
+    });
+
+    describe('object edge cases', () => {
+      it('reads all primitive object types', () => {
+        const b = new TestBuilder();
+        b.writeObject('chr', 65);
+        b.writeObject('int', 42);
+        b.writeObject('lon', '9999');
+        b.writeObject('str', 'hello');
+        b.writeObject('ptr', '0xabc');
+        b.writeObject('tim', 1700000000);
+
+        const p = new BinaryParser(b.build());
+        expect(p.readObject()).toEqual({ type: 'chr', value: 65 });
+        expect(p.readObject()).toEqual({ type: 'int', value: 42 });
+        expect(p.readObject()).toEqual({ type: 'lon', value: '9999' });
+        expect(p.readObject()).toEqual({ type: 'str', value: 'hello' });
+        expect(p.readObject()).toEqual({ type: 'ptr', value: '0xabc' });
+        const timObj = p.readObject();
+        expect(timObj.type).toBe('tim');
+        expect((timObj.value as Date).getTime()).toBe(1700000000 * 1000);
+      });
     });
   });
 });
