@@ -108,6 +108,7 @@ export class RelaySession {
     const htb = obj.value as WeechatHashtable;
     const serverAlgo = htb.entries.get('password_hash_algo') as string | undefined;
     const serverNonce = htb.entries.get('nonce') as string | undefined;
+    const serverIterations = htb.entries.get('password_hash_iterations') as string | undefined;
 
     if (!serverNonce) {
       this.onError('No nonce in handshake response');
@@ -122,7 +123,9 @@ export class RelaySession {
 
     try {
       const clientNonce = generateClientNonce();
-      const iterations = selectedAlgo.startsWith('pbkdf2') ? 100000 : undefined;
+      const iterations = selectedAlgo.startsWith('pbkdf2')
+        ? (serverIterations ? parseInt(serverIterations, 10) : 100000)
+        : undefined;
       const hash = await computeHash(
         selectedAlgo,
         this.password,

@@ -10,8 +10,8 @@ export function handshake(params: {
   return `(handshake) handshake ${parts.join(',')}\n`;
 }
 
-export function init(password: string, totp?: string): string {
-  let cmd = `init password=${password}`;
+export function init(authString: string, totp?: string): string {
+  let cmd = `init ${authString}`;
   if (totp) cmd += `,totp=${totp}`;
   return cmd + '\n';
 }

@@ -38,12 +38,20 @@ describe('commands', () => {
   });
 
   describe('init', () => {
-    it('builds init without totp', () => {
-      expect(init('mypassword')).toBe('init password=mypassword\n');
+    it('builds init with plain password', () => {
+      expect(init('password=mypassword')).toBe('init password=mypassword\n');
+    });
+
+    it('builds init with hashed password', () => {
+      expect(init('password_hash_sha256:nonce:abc123')).toBe(
+        'init password_hash_sha256:nonce:abc123\n',
+      );
     });
 
     it('builds init with totp', () => {
-      expect(init('mypassword', '123456')).toBe('init password=mypassword,totp=123456\n');
+      expect(init('password=mypassword', '123456')).toBe(
+        'init password=mypassword,totp=123456\n',
+      );
     });
   });
 

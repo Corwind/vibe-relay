@@ -9,24 +9,24 @@ describe('auth', () => {
       expect(result).toBe('password=secret');
     });
 
-    it('computes sha256 hash', async () => {
+    it('computes sha256 hash with client nonce', async () => {
       const result = await computeHash('sha256', 'secret', 'aa', 'bb');
-      expect(result).toMatch(/^password_hash_sha256:[0-9a-f]{64}$/);
+      expect(result).toMatch(/^password_hash_sha256:bb:[0-9a-f]{64}$/);
     });
 
-    it('computes sha512 hash', async () => {
+    it('computes sha512 hash with client nonce', async () => {
       const result = await computeHash('sha512', 'secret', 'aa', 'bb');
-      expect(result).toMatch(/^password_hash_sha512:[0-9a-f]{128}$/);
+      expect(result).toMatch(/^password_hash_sha512:bb:[0-9a-f]{128}$/);
     });
 
-    it('computes pbkdf2+sha256 hash', async () => {
+    it('computes pbkdf2+sha256 hash with client nonce and iterations', async () => {
       const result = await computeHash('pbkdf2+sha256', 'secret', 'aa', 'bb', 1000);
-      expect(result).toMatch(/^password_hash_pbkdf2_sha256:[0-9a-f]{64}$/);
+      expect(result).toMatch(/^password_hash_pbkdf2_sha256:bb:1000:[0-9a-f]{64}$/);
     });
 
-    it('computes pbkdf2+sha512 hash', async () => {
+    it('computes pbkdf2+sha512 hash with client nonce and iterations', async () => {
       const result = await computeHash('pbkdf2+sha512', 'secret', 'aa', 'bb', 1000);
-      expect(result).toMatch(/^password_hash_pbkdf2_sha512:[0-9a-f]{64}$/);
+      expect(result).toMatch(/^password_hash_pbkdf2_sha512:bb:1000:[0-9a-f]{64}$/);
     });
 
     it('produces deterministic sha256 output for same inputs', async () => {
@@ -48,14 +48,12 @@ describe('auth', () => {
     });
 
     it('verifies sha256 against known test vector', async () => {
-      // Compute: SHA-256(hex2bytes("aabbccdd") + "secret")
-      // salt = [0xAA, 0xBB, 0xCC, 0xDD]
-      // input = salt + utf8("secret")
       const result = await computeHash('sha256', 'secret', 'aabb', 'ccdd');
-      // Verify format and length
-      const [prefix, hash] = result.split(':');
-      expect(prefix).toBe('password_hash_sha256');
-      expect(hash).toHaveLength(64);
+      // Format: password_hash_sha256:CLIENT_NONCE:HASH
+      const parts = result.split(':');
+      expect(parts[0]).toBe('password_hash_sha256');
+      expect(parts[1]).toBe('ccdd');
+      expect(parts[2]).toHaveLength(64);
     });
   });
 
@@ -119,7 +117,7 @@ describe('auth', () => {
       const expectedHash = await sha256hex(input);
 
       const result = await computeHash('sha256', password, serverNonce, clientNonce);
-      expect(result).toBe(`password_hash_sha256:${expectedHash}`);
+      expect(result).toBe(`password_hash_sha256:${clientNonce}:${expectedHash}`);
     });
 
     it('sha512: matches manually computed hash', async () => {
@@ -135,17 +133,17 @@ describe('auth', () => {
       const expectedHash = await sha512hex(input);
 
       const result = await computeHash('sha512', password, serverNonce, clientNonce);
-      expect(result).toBe(`password_hash_sha512:${expectedHash}`);
+      expect(result).toBe(`password_hash_sha512:${clientNonce}:${expectedHash}`);
     });
 
     it('sha256: empty password produces valid hash', async () => {
       const result = await computeHash('sha256', '', 'aa', 'bb');
-      expect(result).toMatch(/^password_hash_sha256:[0-9a-f]{64}$/);
+      expect(result).toMatch(/^password_hash_sha256:bb:[0-9a-f]{64}$/);
     });
 
     it('sha512: empty password produces valid hash', async () => {
       const result = await computeHash('sha512', '', 'aa', 'bb');
-      expect(result).toMatch(/^password_hash_sha512:[0-9a-f]{128}$/);
+      expect(result).toMatch(/^password_hash_sha512:bb:[0-9a-f]{128}$/);
     });
 
     it('pbkdf2+sha256: deterministic with same inputs', async () => {
@@ -175,10 +173,11 @@ describe('auth', () => {
     it('sha256 vs sha512 produce different length hashes', async () => {
       const sha256Result = await computeHash('sha256', 'pass', 'aa', 'bb');
       const sha512Result = await computeHash('sha512', 'pass', 'aa', 'bb');
-      const sha256Hash = sha256Result.split(':')[1];
-      const sha512Hash = sha512Result.split(':')[1];
-      expect(sha256Hash).toHaveLength(64); // 256 bits = 64 hex chars
-      expect(sha512Hash).toHaveLength(128); // 512 bits = 128 hex chars
+      // Format: password_hash_ALGO:CLIENT_NONCE:HASH
+      const sha256Parts = sha256Result.split(':');
+      const sha512Parts = sha512Result.split(':');
+      expect(sha256Parts[2]).toHaveLength(64); // 256 bits = 64 hex chars
+      expect(sha512Parts[2]).toHaveLength(128); // 512 bits = 128 hex chars
     });
 
     it('plain: passes through password unchanged', async () => {
@@ -199,7 +198,7 @@ describe('auth', () => {
 
     it('sha256: Unicode password produces valid hash', async () => {
       const result = await computeHash('sha256', '\u00e9\u00e8\u00ea\u{1F600}', 'aa', 'bb');
-      expect(result).toMatch(/^password_hash_sha256:[0-9a-f]{64}$/);
+      expect(result).toMatch(/^password_hash_sha256:bb:[0-9a-f]{64}$/);
     });
 
     it('pbkdf2+sha256: long nonces work correctly', async () => {
@@ -212,7 +211,9 @@ describe('auth', () => {
         longClientNonce,
         1000,
       );
-      expect(result).toMatch(/^password_hash_pbkdf2_sha256:[0-9a-f]{64}$/);
+      expect(result).toMatch(
+        new RegExp(`^password_hash_pbkdf2_sha256:${longClientNonce}:1000:[0-9a-f]{64}$`),
+      );
     });
   });
 });

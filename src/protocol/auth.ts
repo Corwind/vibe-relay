@@ -35,7 +35,7 @@ export async function computeHash(
     dataToHash.set(salt, 0);
     dataToHash.set(passwordBytes, salt.length);
     const hash = await crypto.subtle.digest(algoName, dataToHash);
-    return `password_hash_${algorithm}:${bytesToHex(new Uint8Array(hash))}`;
+    return `password_hash_${algorithm}:${clientNonce}:${bytesToHex(new Uint8Array(hash))}`;
   }
 
   if (algorithm === 'pbkdf2+sha256' || algorithm === 'pbkdf2+sha512') {
@@ -59,7 +59,7 @@ export async function computeHash(
       256,
     );
 
-    return `password_hash_pbkdf2_${shaLabel}:${bytesToHex(new Uint8Array(derivedBits))}`;
+    return `password_hash_pbkdf2_${shaLabel}:${clientNonce}:${iterCount}:${bytesToHex(new Uint8Array(derivedBits))}`;
   }
 
   throw new Error(`Unsupported algorithm: ${algorithm}`);
