@@ -1,8 +1,10 @@
-export enum BufferType {
-  Channel = 'channel',
-  Private = 'private',
-  Server = 'server',
-}
+export const BufferType = {
+  Channel: 'channel',
+  Private: 'private',
+  Server: 'server',
+} as const;
+
+export type BufferType = (typeof BufferType)[keyof typeof BufferType];
 
 export const IRC_COLORS: Record<number, string> = {
   0: '#ffffff', // white
