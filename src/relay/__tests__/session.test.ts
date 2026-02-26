@@ -6,12 +6,14 @@ import { useConnectionStore } from '@/store/connection-store';
 const mockSend = vi.fn();
 const mockDisconnect = vi.fn();
 const mockIsConnected = vi.fn(() => true);
+const mockDisableReconnect = vi.fn();
 
 vi.mock('../connection', () => ({
   RelayConnection: class MockRelayConnection {
     send = mockSend;
     disconnect = mockDisconnect;
     isConnected = mockIsConnected;
+    disableReconnect = mockDisableReconnect;
     private onMessageCb: ((msg: unknown) => void) | null = null;
     private onOpenCb: (() => void) | null = null;
 

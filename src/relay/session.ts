@@ -182,6 +182,14 @@ export class RelaySession {
 
   private onClose(code: number, reason: string): void {
     this.stopPing();
+    const connState = useConnectionStore.getState().state;
+
+    // Don't auto-reconnect if we were still authenticating (auth failure)
+    // or if we never fully connected — prevents spamming the server
+    if (connState === 'authenticating' || connState === 'connecting') {
+      this.connection.disableReconnect();
+    }
+
     if (code !== 1000) {
       useConnectionStore.getState().setError(`Connection closed: ${reason || `code ${code}`}`);
     } else {
@@ -190,6 +198,11 @@ export class RelaySession {
   }
 
   private onError(error: string): void {
+    // Disable reconnect on explicit errors during auth to avoid spamming
+    const connState = useConnectionStore.getState().state;
+    if (connState === 'authenticating' || connState === 'connecting') {
+      this.connection.disableReconnect();
+    }
     useConnectionStore.getState().setError(error);
   }
 

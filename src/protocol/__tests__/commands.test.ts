@@ -43,8 +43,14 @@ describe('commands', () => {
     });
 
     it('builds init with hashed password', () => {
-      expect(init('password_hash_sha256:nonce:abc123')).toBe(
-        'init password_hash_sha256:nonce:abc123\n',
+      expect(init('password_hash=sha256:aabbccdd:abc123')).toBe(
+        'init password_hash=sha256:aabbccdd:abc123\n',
+      );
+    });
+
+    it('builds init with pbkdf2 hash', () => {
+      expect(init('password_hash=pbkdf2+sha256:aabb:100000:abc123')).toBe(
+        'init password_hash=pbkdf2+sha256:aabb:100000:abc123\n',
       );
     });
 

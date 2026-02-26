@@ -55,6 +55,12 @@ export class RelayConnection {
     return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
   }
 
+  /** Disable auto-reconnect without closing the socket (e.g., after auth failure). */
+  disableReconnect(): void {
+    this.shouldReconnect = false;
+    this.clearReconnectTimer();
+  }
+
   private openSocket(): void {
     if (!this.options) return;
 
