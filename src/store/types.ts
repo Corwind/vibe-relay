@@ -11,6 +11,7 @@ export interface WeechatBuffer {
   highlightCount: number;
   isActive: boolean;
   nicklistVisible: boolean;
+  hidden?: boolean;
   localVariables: Record<string, string>;
 }
 

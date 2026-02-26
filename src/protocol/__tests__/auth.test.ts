@@ -84,14 +84,14 @@ describe('auth', () => {
   describe('known-answer tests', () => {
     // Helper to compute SHA-256 directly for reference verification
     async function sha256hex(data: Uint8Array): Promise<string> {
-      const hash = await crypto.subtle.digest('SHA-256', data);
+      const hash = await crypto.subtle.digest('SHA-256', data.buffer as ArrayBuffer);
       return Array.from(new Uint8Array(hash))
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
     }
 
     async function sha512hex(data: Uint8Array): Promise<string> {
-      const hash = await crypto.subtle.digest('SHA-512', data);
+      const hash = await crypto.subtle.digest('SHA-512', data.buffer as ArrayBuffer);
       return Array.from(new Uint8Array(hash))
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');

@@ -9,16 +9,19 @@ import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Menu, Settings } from 'lucide-react';
+import { Menu, Settings, Users } from 'lucide-react';
 import { useConnectionStore } from '@/store/connection-store';
 import { useBufferStore } from '@/store/buffer-store';
 import { useRelay } from '@/hooks/use-relay';
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import type { ConnectionSettings } from '@/store/types';
 
 export function AppLayout() {
   const [connectOpen, setConnectOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [, setSearchFocused] = useState(false);
+  const [nicklistOpen, setNicklistOpen] = useState(false);
 
   const connectionState = useConnectionStore((s) => s.state);
   const activeBufferId = useBufferStore((s) => s.activeBufferId);
@@ -27,6 +30,23 @@ export function AppLayout() {
   );
 
   const { connect, disconnect, sendCommand } = useRelay();
+
+  const handleToggleSearch = useCallback(() => {
+    setSearchFocused((prev) => !prev);
+  }, []);
+
+  const handleEscape = useCallback(() => {
+    setSettingsOpen(false);
+    setConnectOpen(false);
+    setSidebarOpen(false);
+    setNicklistOpen(false);
+    setSearchFocused(false);
+  }, []);
+
+  useKeyboardShortcuts({
+    onToggleSearch: handleToggleSearch,
+    onEscape: handleEscape,
+  });
 
   const handleConnect = useCallback(
     (settings: ConnectionSettings) => {
@@ -122,6 +142,17 @@ export function AppLayout() {
             {activeBuffer?.shortName ?? 'relay-client'}
           </h2>
           <ConnectionStatus />
+          <Sheet open={nicklistOpen} onOpenChange={setNicklistOpen}>
+            <SheetTrigger asChild>
+              <Button size="icon" variant="ghost">
+                <Users className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-64 p-0">
+              <SheetTitle className="sr-only">Users</SheetTitle>
+              <NickList />
+            </SheetContent>
+          </Sheet>
         </div>
         <div className="flex-1 overflow-hidden">
           <MessageList />

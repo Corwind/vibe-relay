@@ -25,7 +25,7 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
   settings: defaultSettings,
   error: null,
   latency: null,
-  setState: (state) => set({ state, error: state === 'error' ? undefined : null }),
+  setState: (state) => set({ state, error: null }),
   setSettings: (settings) => set({ settings }),
   setError: (error) => set({ error, state: 'disconnected' }),
   setLatency: (latency) => set({ latency }),
