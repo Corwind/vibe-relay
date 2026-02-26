@@ -217,11 +217,11 @@ export class BinaryBuilder {
     // Write content
     result.set(content, 9 + idEncoded.length);
 
-    return result.buffer;
+    return result.buffer as ArrayBuffer;
   }
 
   build(): ArrayBuffer {
-    return this.concat().buffer;
+    return this.concat().buffer as ArrayBuffer;
   }
 
   private concat(): Uint8Array {
