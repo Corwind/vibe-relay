@@ -32,7 +32,7 @@ describe('event-handler', () => {
     useNicklistStore.getState().clearAll();
   });
 
-  describe('buffer list (hdata_buffer*)', () => {
+  describe('buffer list (listbuffers)', () => {
     it('populates buffers from initial hdata response', () => {
       const hdata: WeechatHdata = {
         path: 'buffer',
@@ -64,7 +64,7 @@ describe('event-handler', () => {
         ],
       };
 
-      handleEvent(makeHdataMessage('hdata_buffer_gui_buffers', hdata));
+      handleEvent(makeHdataMessage('listbuffers', hdata));
 
       const buffers = useBufferStore.getState().buffers;
       expect(buffers['0xabc']).toBeDefined();
@@ -96,8 +96,111 @@ describe('event-handler', () => {
         ],
       };
 
-      handleEvent(makeHdataMessage('hdata_buffer_gui_buffers', hdata));
+      handleEvent(makeHdataMessage('listbuffers', hdata));
       expect(useBufferStore.getState().activeBufferId).toBe('0xabc');
+    });
+  });
+
+  describe('line list (listlines)', () => {
+    it('populates messages from hdata line response', () => {
+      const tagsArray: WeechatArray = {
+        type: 'str',
+        values: ['irc_privmsg', 'nick_alice'],
+      };
+
+      const hdata: WeechatHdata = {
+        path: 'buffer/own_lines/last_line/data',
+        keys: [
+          { name: 'buffer', type: 'ptr' },
+          { name: 'date', type: 'tim' },
+          { name: 'prefix', type: 'str' },
+          { name: 'message', type: 'str' },
+          { name: 'highlight', type: 'chr' },
+          { name: 'tags_array', type: 'arr' },
+          { name: 'displayed', type: 'chr' },
+          { name: 'notify', type: 'int' },
+        ],
+        entries: [
+          {
+            pointers: ['0xbuf', '0xlines', '0xline1', '0xdata1'],
+            values: {
+              buffer: '0xbuf',
+              date: new Date('2024-01-15T10:00:00Z'),
+              prefix: 'alice',
+              message: 'Hello',
+              highlight: 0,
+              tags_array: tagsArray,
+              displayed: 1,
+              notify: 1,
+            },
+          },
+          {
+            pointers: ['0xbuf', '0xlines', '0xline2', '0xdata2'],
+            values: {
+              buffer: '0xbuf',
+              date: new Date('2024-01-15T10:01:00Z'),
+              prefix: 'bob',
+              message: 'World',
+              highlight: 0,
+              tags_array: { type: 'str', values: ['irc_privmsg'] } as WeechatArray,
+              displayed: 1,
+              notify: 1,
+            },
+          },
+        ],
+      };
+
+      handleEvent(makeHdataMessage('listlines', hdata));
+      const msgs = useMessageStore.getState().messages['0xbuf'];
+      expect(msgs).toHaveLength(2);
+      expect(msgs[0].message).toBe('Hello');
+      expect(msgs[1].message).toBe('World');
+    });
+
+    it('prepends lines to existing messages', () => {
+      // Add an existing message first
+      useMessageStore.getState().addMessage('0xbuf', {
+        id: 'existing',
+        bufferId: '0xbuf',
+        date: new Date('2024-01-15T11:00:00Z'),
+        prefix: 'charlie',
+        message: 'Existing message',
+        tags: [],
+        highlight: false,
+        displayed: true,
+      });
+
+      const hdata: WeechatHdata = {
+        path: 'buffer/own_lines/last_line/data',
+        keys: [
+          { name: 'buffer', type: 'ptr' },
+          { name: 'date', type: 'tim' },
+          { name: 'prefix', type: 'str' },
+          { name: 'message', type: 'str' },
+          { name: 'highlight', type: 'chr' },
+          { name: 'displayed', type: 'chr' },
+        ],
+        entries: [
+          {
+            pointers: ['0xbuf', '0xlines', '0xline1', '0xdata1'],
+            values: {
+              buffer: '0xbuf',
+              date: new Date('2024-01-15T09:00:00Z'),
+              prefix: 'alice',
+              message: 'Older message',
+              highlight: 0,
+              displayed: 1,
+            },
+          },
+        ],
+      };
+
+      handleEvent(makeHdataMessage('listlines', hdata));
+      const msgs = useMessageStore.getState().messages['0xbuf'];
+      expect(msgs).toHaveLength(2);
+      // Older message should be first (prepended)
+      expect(msgs[0].message).toBe('Older message');
+      expect(msgs[1].message).toBe('Existing message');
     });
   });
 

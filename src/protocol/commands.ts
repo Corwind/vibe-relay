@@ -16,8 +16,8 @@ export function init(authString: string, totp?: string): string {
   return cmd + '\n';
 }
 
-export function hdata(path: string, keys?: string[]): string {
-  const id = `hdata_${path.replace(/[/:]/g, '_')}`;
+export function hdata(path: string, keys?: string[], customId?: string): string {
+  const id = customId ?? `hdata_${path.replace(/[^a-zA-Z0-9_]/g, '_')}`;
   let cmd = `(${id}) hdata ${path}`;
   if (keys?.length) cmd += ` ${keys.join(',')}`;
   return cmd + '\n';

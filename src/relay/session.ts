@@ -48,16 +48,11 @@ export class RelaySession {
 
   fetchLines(bufferPointer: string, count = 100): void {
     this.connection.send(
-      commands.hdata(`buffer:${bufferPointer}/own_lines/last_line(-${count})/data`, [
-        'buffer',
-        'date',
-        'prefix',
-        'message',
-        'highlight',
-        'tags_array',
-        'displayed',
-        'notify',
-      ]),
+      commands.hdata(
+        `buffer:${bufferPointer}/own_lines/last_line(-${count})/data`,
+        ['buffer', 'date', 'prefix', 'message', 'highlight', 'tags_array', 'displayed', 'notify'],
+        'listlines',
+      ),
     );
   }
 
@@ -162,15 +157,11 @@ export class RelaySession {
 
     // Fetch initial data
     this.connection.send(
-      commands.hdata('buffer:gui_buffers(*)', [
-        'number',
-        'full_name',
-        'short_name',
-        'title',
-        'type',
-        'hidden',
-        'local_variables',
-      ]),
+      commands.hdata(
+        'buffer:gui_buffers(*)',
+        ['number', 'full_name', 'short_name', 'title', 'type', 'hidden', 'local_variables'],
+        'listbuffers',
+      ),
     );
 
     // Sync all events

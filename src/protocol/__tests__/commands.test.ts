@@ -64,14 +64,30 @@ describe('commands', () => {
   describe('hdata', () => {
     it('builds hdata without keys', () => {
       expect(hdata('buffer:gui_buffers(*)')).toBe(
-        '(hdata_buffer_gui_buffers(*)) hdata buffer:gui_buffers(*)\n',
+        '(hdata_buffer_gui_buffers___) hdata buffer:gui_buffers(*)\n',
       );
     });
 
     it('builds hdata with keys', () => {
       expect(hdata('buffer:gui_buffers(*)', ['number', 'name'])).toBe(
-        '(hdata_buffer_gui_buffers(*)) hdata buffer:gui_buffers(*) number,name\n',
+        '(hdata_buffer_gui_buffers___) hdata buffer:gui_buffers(*) number,name\n',
       );
+    });
+
+    it('builds hdata with custom id', () => {
+      expect(hdata('buffer:gui_buffers(*)', ['number'], 'listbuffers')).toBe(
+        '(listbuffers) hdata buffer:gui_buffers(*) number\n',
+      );
+    });
+
+    it('strips parentheses and special chars from auto-generated id', () => {
+      const cmd = hdata('buffer:0x123/own_lines/last_line(-100)/data', ['date', 'message']);
+      // Should not contain ( or ) in the ID portion
+      const idMatch = cmd.match(/^\(([^)]+)\)/);
+      expect(idMatch).not.toBeNull();
+      expect(idMatch![1]).not.toContain('(');
+      expect(idMatch![1]).not.toContain(')');
+      expect(idMatch![1]).not.toContain('*');
     });
   });
 

@@ -31,9 +31,7 @@ describe('store integration', () => {
   describe('buffer list population via event handler', () => {
     it('populates buffer store from buffer list hdata response', () => {
       const msg = parseMessage(createBufferListResponse());
-      // The buffer list response has id "listbuffers" but event handler
-      // routes hdata_buffer* prefixed IDs. Let's simulate an hdata_buffer ID.
-      handleEvent({ ...msg, id: 'hdata_buffer_gui_buffers(*)' });
+      handleEvent({ ...msg, id: 'listbuffers' });
 
       const buffers = useBufferStore.getState().buffers;
       const bufferList = Object.values(buffers);
@@ -58,7 +56,7 @@ describe('store integration', () => {
 
     it('auto-selects first buffer when none is active', () => {
       const msg = parseMessage(createBufferListResponse());
-      handleEvent({ ...msg, id: 'hdata_buffer_gui_buffers(*)' });
+      handleEvent({ ...msg, id: 'listbuffers' });
 
       const activeId = useBufferStore.getState().activeBufferId;
       expect(activeId).not.toBeNull();
@@ -72,7 +70,7 @@ describe('store integration', () => {
     it('adds message to message store for the correct buffer', () => {
       // First populate buffers so unread counting works
       const bufMsg = parseMessage(createBufferListResponse());
-      handleEvent({ ...bufMsg, id: 'hdata_buffer_gui_buffers(*)' });
+      handleEvent({ ...bufMsg, id: 'listbuffers' });
 
       // Set active to a different buffer so unread increments
       useBufferStore.getState().setActiveBuffer('0x1a2b3c');
@@ -92,7 +90,7 @@ describe('store integration', () => {
     it('increments unread count when message arrives for non-active buffer', () => {
       // Populate buffers
       const bufMsg = parseMessage(createBufferListResponse());
-      handleEvent({ ...bufMsg, id: 'hdata_buffer_gui_buffers(*)' });
+      handleEvent({ ...bufMsg, id: 'listbuffers' });
 
       // Set active to core buffer, not the channel
       useBufferStore.getState().setActiveBuffer('0x1a2b3c');
@@ -108,7 +106,7 @@ describe('store integration', () => {
     it('does NOT increment unread count when message arrives for active buffer', () => {
       // Populate buffers
       const bufMsg = parseMessage(createBufferListResponse());
-      handleEvent({ ...bufMsg, id: 'hdata_buffer_gui_buffers(*)' });
+      handleEvent({ ...bufMsg, id: 'listbuffers' });
 
       // Set active to the channel buffer that will receive the message
       useBufferStore.getState().setActiveBuffer('0x7a8b9c');
@@ -122,7 +120,7 @@ describe('store integration', () => {
 
     it('accumulates unread count across multiple messages', () => {
       const bufMsg = parseMessage(createBufferListResponse());
-      handleEvent({ ...bufMsg, id: 'hdata_buffer_gui_buffers(*)' });
+      handleEvent({ ...bufMsg, id: 'listbuffers' });
       useBufferStore.getState().setActiveBuffer('0x1a2b3c');
 
       // Send 3 messages to the channel buffer
@@ -264,7 +262,7 @@ describe('store integration', () => {
     it('clears unread count when buffer is selected', () => {
       // Populate buffers
       const bufMsg = parseMessage(createBufferListResponse());
-      handleEvent({ ...bufMsg, id: 'hdata_buffer_gui_buffers(*)' });
+      handleEvent({ ...bufMsg, id: 'listbuffers' });
 
       // Set active to core buffer
       useBufferStore.getState().setActiveBuffer('0x1a2b3c');
@@ -399,7 +397,7 @@ describe('store integration', () => {
 
       // 2. Buffer list arrives
       const bufMsg = parseMessage(createBufferListResponse());
-      handleEvent({ ...bufMsg, id: 'hdata_buffer_gui_buffers(*)' });
+      handleEvent({ ...bufMsg, id: 'listbuffers' });
 
       const buffers = useBufferStore.getState().buffers;
       expect(Object.keys(buffers)).toHaveLength(3);

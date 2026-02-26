@@ -14,6 +14,12 @@ export function handleEvent(message: ProtocolMessage): void {
   const { id, objects } = message;
 
   switch (id) {
+    case 'listbuffers':
+      handleBufferList(objects);
+      break;
+    case 'listlines':
+      handleLineList(objects);
+      break;
     case '_buffer_opened':
       handleBufferOpened(objects);
       break;
@@ -38,10 +44,6 @@ export function handleEvent(message: ProtocolMessage): void {
       handleNicklistDiff(objects);
       break;
     default:
-      // Handle hdata responses from initial fetch
-      if (id.startsWith('hdata_buffer')) {
-        handleBufferList(objects);
-      }
       break;
   }
 }
@@ -60,6 +62,28 @@ function handleBufferList(objects: ProtocolMessage['objects']): void {
     // Auto-select first buffer if none selected
     if (!store.activeBufferId && hdata.entries.length > 0) {
       store.setActiveBuffer(hdata.entries[0].pointers[0]);
+    }
+  }
+}
+
+function handleLineList(objects: ProtocolMessage['objects']): void {
+  for (const obj of objects) {
+    if (obj.type !== 'hda') continue;
+    const hdata = obj.value as WeechatHdata;
+    const msgStore = useMessageStore.getState();
+
+    // Group messages by buffer pointer
+    const byBuffer = new Map<string, WeechatMessage[]>();
+    for (const entry of hdata.entries) {
+      const bufferPointer = entry.values['buffer'] as string;
+      const msg = hdataEntryToMessage(entry, bufferPointer);
+      const list = byBuffer.get(bufferPointer) ?? [];
+      list.push(msg);
+      byBuffer.set(bufferPointer, list);
+    }
+
+    for (const [bufferId, messages] of byBuffer) {
+      msgStore.prependMessages(bufferId, messages);
     }
   }
 }
