@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { BufferList } from '@/components/buffers/BufferList';
 import { MessageList } from '@/components/messages/MessageList';
 import { NickList } from '@/components/nicklist/NickList';
@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Menu, Settings, Users } from 'lucide-react';
 import { useConnectionStore } from '@/store/connection-store';
 import { useBufferStore } from '@/store/buffer-store';
+import { useMessageStore } from '@/store/message-store';
 import { useRelay } from '@/hooks/use-relay';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import type { ConnectionSettings } from '@/store/types';
@@ -29,7 +30,7 @@ export function AppLayout() {
     s.activeBufferId ? s.buffers[s.activeBufferId] : null,
   );
 
-  const { connect, disconnect, sendCommand } = useRelay();
+  const { connect, disconnect, sendInput, fetchLines, fetchNicklist } = useRelay();
 
   const handleToggleSearch = useCallback(() => {
     setSearchFocused((prev) => !prev);
@@ -59,10 +60,34 @@ export function AppLayout() {
   const handleSend = useCallback(
     (text: string) => {
       if (!activeBufferId) return;
-      sendCommand(`input ${activeBufferId} ${text}`);
+      sendInput(activeBufferId, text);
     },
-    [activeBufferId, sendCommand],
+    [activeBufferId, sendInput],
   );
+
+  // Fetch backlog + nicklist when switching buffers
+  const prevBufferRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      !activeBufferId ||
+      connectionState !== 'connected' ||
+      activeBufferId === prevBufferRef.current
+    ) {
+      prevBufferRef.current = activeBufferId;
+      return;
+    }
+    prevBufferRef.current = activeBufferId;
+
+    // Only fetch lines if we don't already have messages for this buffer
+    const existing = useMessageStore.getState().messages[activeBufferId];
+    if (!existing || existing.length === 0) {
+      fetchLines(activeBufferId);
+    }
+    fetchNicklist(activeBufferId);
+
+    // Clear unread count for the newly active buffer
+    useBufferStore.getState().clearUnread(activeBufferId);
+  }, [activeBufferId, connectionState, fetchLines, fetchNicklist]);
 
   const sidebarContent = (
     <div className="flex h-full flex-col">
