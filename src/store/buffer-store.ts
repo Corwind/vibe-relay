@@ -22,9 +22,7 @@ export const useBufferStore = create<BufferStore>((set) => ({
     })),
   removeBuffer: (id) =>
     set((s) => {
-      const rest = Object.fromEntries(
-        Object.entries(s.buffers).filter(([key]) => key !== id),
-      );
+      const rest = Object.fromEntries(Object.entries(s.buffers).filter(([key]) => key !== id));
       return {
         buffers: rest,
         activeBufferId: s.activeBufferId === id ? null : s.activeBufferId,

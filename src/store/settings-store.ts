@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface SettingsStore {
   theme: 'light' | 'dark' | 'system';
@@ -15,17 +16,24 @@ interface SettingsStore {
   setFontSize: (size: number) => void;
 }
 
-export const useSettingsStore = create<SettingsStore>((set) => ({
-  theme: 'dark',
-  showTimestamps: true,
-  timestampFormat: '24h',
-  showJoinPart: false,
-  mediaPreview: true,
-  fontSize: 14,
-  setTheme: (theme) => set({ theme }),
-  setShowTimestamps: (showTimestamps) => set({ showTimestamps }),
-  setTimestampFormat: (timestampFormat) => set({ timestampFormat }),
-  setShowJoinPart: (showJoinPart) => set({ showJoinPart }),
-  setMediaPreview: (mediaPreview) => set({ mediaPreview }),
-  setFontSize: (fontSize) => set({ fontSize }),
-}));
+export const useSettingsStore = create<SettingsStore>()(
+  persist(
+    (set) => ({
+      theme: 'dark',
+      showTimestamps: true,
+      timestampFormat: '24h',
+      showJoinPart: false,
+      mediaPreview: true,
+      fontSize: 14,
+      setTheme: (theme) => set({ theme }),
+      setShowTimestamps: (showTimestamps) => set({ showTimestamps }),
+      setTimestampFormat: (timestampFormat) => set({ timestampFormat }),
+      setShowJoinPart: (showJoinPart) => set({ showJoinPart }),
+      setMediaPreview: (mediaPreview) => set({ mediaPreview }),
+      setFontSize: (fontSize) => set({ fontSize }),
+    }),
+    {
+      name: 'relay-settings',
+    },
+  ),
+);

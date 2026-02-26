@@ -1,9 +1,7 @@
+import { AppLayout } from '@/components/layout/AppLayout';
+
 function App() {
-  return (
-    <div className="flex h-screen items-center justify-center">
-      <h1 className="text-2xl font-bold">relay-client</h1>
-    </div>
-  );
+  return <AppLayout />;
 }
 
 export default App;
