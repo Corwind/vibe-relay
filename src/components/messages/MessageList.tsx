@@ -1,4 +1,4 @@
-import { useCallback, useRef, memo } from 'react';
+import { useCallback, useRef, useMemo, memo } from 'react';
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { useMessages } from '@/hooks/use-messages';
 import { MessageItem } from './MessageItem';
@@ -38,7 +38,7 @@ export const MessageList = memo(function MessageList({ onStartReached }: Message
   const messages = useMessages();
   const virtuosoRef = useRef<VirtuosoHandle>(null);
 
-  const items = buildItems(messages);
+  const items = useMemo(() => buildItems(messages), [messages]);
 
   const renderItem = useCallback((_index: number, item: ListItem) => {
     if (item.type === 'divider') {

@@ -1,4 +1,4 @@
-const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|svg|bmp|ico)(\?[^\s]*)?$/i;
+const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|bmp|ico)(\?[^\s]*)?$/i;
 const VIDEO_EXTENSIONS = /\.(mp4|webm|ogg|mov)(\?[^\s]*)?$/i;
 const YOUTUBE_REGEX =
   /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[&?][^\s]*)?/;

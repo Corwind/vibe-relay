@@ -107,7 +107,7 @@ export function AppLayout() {
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between p-3">
         <h1 className="text-sm font-bold">relay-client</h1>
-        <Button size="icon" variant="ghost" onClick={() => setSettingsOpen(true)}>
+        <Button size="icon" variant="ghost" onClick={() => setSettingsOpen(true)} aria-label="Settings">
           <Settings className="h-4 w-4" />
         </Button>
       </div>
@@ -168,7 +168,7 @@ export function AppLayout() {
         <div className="flex items-center gap-2 border-b border-border px-3 py-2">
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
-              <Button size="icon" variant="ghost">
+              <Button size="icon" variant="ghost" aria-label="Open menu">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -183,7 +183,7 @@ export function AppLayout() {
           <ConnectionStatus />
           <Sheet open={nicklistOpen} onOpenChange={setNicklistOpen}>
             <SheetTrigger asChild>
-              <Button size="icon" variant="ghost">
+              <Button size="icon" variant="ghost" aria-label="Show users">
                 <Users className="h-5 w-5" />
               </Button>
             </SheetTrigger>

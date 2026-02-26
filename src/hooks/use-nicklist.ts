@@ -15,13 +15,17 @@ function prefixOrder(prefix: string): number {
   return idx >= 0 ? idx : NICK_PREFIXES.length;
 }
 
+const EMPTY: NickEntry[] = [];
+
 export function useNicklist(): GroupedNicklist[] {
   const activeBufferId = useBufferStore((s) => s.activeBufferId);
-  const allNicklists = useNicklistStore((s) => s.nicklists);
+  const nicks = useNicklistStore((s) => {
+    if (!activeBufferId) return EMPTY;
+    return s.nicklists[activeBufferId] ?? EMPTY;
+  });
 
   return useMemo(() => {
-    if (!activeBufferId) return [];
-    const nicks = allNicklists[activeBufferId] ?? [];
+    if (nicks.length === 0) return [];
 
     const groups = new Map<string, NickEntry[]>();
     for (const nick of nicks) {
@@ -32,14 +36,12 @@ export function useNicklist(): GroupedNicklist[] {
       groups.set(key, existing);
     }
 
-    const sorted = Array.from(groups.entries())
+    return Array.from(groups.entries())
       .sort(([a], [b]) => prefixOrder(a) - prefixOrder(b))
       .map(([prefix, groupNicks]) => ({
         prefix,
         label: prefix ? `${prefix} (${groupNicks.length})` : `Users (${groupNicks.length})`,
         nicks: groupNicks.sort((a, b) => a.name.localeCompare(b.name)),
       }));
-
-    return sorted;
-  }, [activeBufferId, allNicklists]);
+  }, [nicks]);
 }

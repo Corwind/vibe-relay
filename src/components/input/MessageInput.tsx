@@ -26,6 +26,7 @@ export const MessageInput = memo(function MessageInput({ onSend, disabled }: Mes
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Type a message..."
+        aria-label="Message input"
         disabled={disabled}
         rows={1}
         className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
@@ -36,6 +37,7 @@ export const MessageInput = memo(function MessageInput({ onSend, disabled }: Mes
         variant="ghost"
         onClick={send}
         disabled={disabled || !value.trim()}
+        aria-label="Send message"
         data-testid="send-button"
       >
         <Send className="h-4 w-4" />
