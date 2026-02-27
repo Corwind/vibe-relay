@@ -164,6 +164,24 @@ export class RelaySession {
       ),
     );
 
+    // Fetch lines for all buffers (initial load)
+    this.connection.send(
+      commands.hdata(
+        'buffer:gui_buffers(*)/own_lines/last_line(-100)/data',
+        ['buffer', 'date', 'prefix', 'message', 'highlight', 'tags_array', 'displayed', 'notify'],
+        'listlines',
+      ),
+    );
+
+    // Fetch hotlist for unread counts
+    this.connection.send(
+      commands.hdata(
+        'hotlist:gui_hotlist(*)',
+        ['buffer', 'count'],
+        'listhotlist',
+      ),
+    );
+
     // Sync all events
     this.connection.send(commands.sync());
 

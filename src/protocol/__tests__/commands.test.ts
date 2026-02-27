@@ -161,6 +161,13 @@ describe('commands', () => {
     });
   });
 
+  describe('hotlist', () => {
+    it('builds hotlist hdata command', () => {
+      const result = hdata('hotlist:gui_hotlist(*)', ['buffer', 'count'], 'listhotlist');
+      expect(result).toBe('(listhotlist) hdata hotlist:gui_hotlist(*) buffer,count\n');
+    });
+  });
+
   describe('quit', () => {
     it('builds quit command', () => {
       expect(quit()).toBe('quit\n');

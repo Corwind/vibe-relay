@@ -109,9 +109,10 @@ export function createBufferListResponse(): ArrayBuffer {
 
 /**
  * A _buffer_line_added event containing a single new message.
+ * Pass a unique `seq` number to generate distinct messages (for deduplication).
  */
-export function createLineAddedEvent(): ArrayBuffer {
-  const now = Math.floor(Date.now() / 1000);
+export function createLineAddedEvent(seq = 0): ArrayBuffer {
+  const now = Math.floor(Date.now() / 1000) + seq;
   const builder = new BinaryBuilder();
   builder.writeObject('hda', {
     path: 'line_data',
@@ -132,7 +133,7 @@ export function createLineAddedEvent(): ArrayBuffer {
           '0x7a8b9c',
           now,
           '\x19F12testuser',
-          'Hello, \x1B[01mworld\x1B[0m! This is a test message.',
+          `Hello, \x1B[01mworld\x1B[0m! This is test message ${seq}.`,
           0,
           { type: 'str', values: ['irc_privmsg', 'nick_testuser', 'log1'] },
           1,

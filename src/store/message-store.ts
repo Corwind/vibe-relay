@@ -19,29 +19,51 @@ function trimToLimit(messages: WeechatMessage[]): WeechatMessage[] {
   return messages;
 }
 
+function deduplicate(
+  existing: WeechatMessage[],
+  incoming: WeechatMessage[],
+): WeechatMessage[] {
+  const seen = new Set(existing.map((m) => m.id));
+  return incoming.filter((m) => !seen.has(m.id));
+}
+
 export const useMessageStore = create<MessageStore>((set) => ({
   messages: {},
   addMessage: (bufferId, message) =>
-    set((s) => ({
-      messages: {
-        ...s.messages,
-        [bufferId]: trimToLimit([...(s.messages[bufferId] ?? []), message]),
-      },
-    })),
+    set((s) => {
+      const existing = s.messages[bufferId] ?? [];
+      if (existing.some((m) => m.id === message.id)) return s;
+      return {
+        messages: {
+          ...s.messages,
+          [bufferId]: trimToLimit([...existing, message]),
+        },
+      };
+    }),
   addMessages: (bufferId, messages) =>
-    set((s) => ({
-      messages: {
-        ...s.messages,
-        [bufferId]: trimToLimit([...(s.messages[bufferId] ?? []), ...messages]),
-      },
-    })),
+    set((s) => {
+      const existing = s.messages[bufferId] ?? [];
+      const newMsgs = deduplicate(existing, messages);
+      if (newMsgs.length === 0) return s;
+      return {
+        messages: {
+          ...s.messages,
+          [bufferId]: trimToLimit([...existing, ...newMsgs]),
+        },
+      };
+    }),
   prependMessages: (bufferId, messages) =>
-    set((s) => ({
-      messages: {
-        ...s.messages,
-        [bufferId]: trimToLimit([...messages, ...(s.messages[bufferId] ?? [])]),
-      },
-    })),
+    set((s) => {
+      const existing = s.messages[bufferId] ?? [];
+      const newMsgs = deduplicate(existing, messages);
+      if (newMsgs.length === 0 && messages.length > 0) return s;
+      return {
+        messages: {
+          ...s.messages,
+          [bufferId]: trimToLimit([...newMsgs, ...existing]),
+        },
+      };
+    }),
   clearMessages: (bufferId) =>
     set((s) => ({
       messages: { ...s.messages, [bufferId]: [] },

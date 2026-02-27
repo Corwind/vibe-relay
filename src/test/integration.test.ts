@@ -414,7 +414,7 @@ describe('store integration', () => {
       expect(nicks.length).toBeGreaterThan(0);
 
       // 5. New message arrives for active buffer -> no unread increment
-      const lineMsg = parseMessage(createLineAddedEvent());
+      const lineMsg = parseMessage(createLineAddedEvent(0));
       handleEvent(lineMsg);
       const msgs = useMessageStore.getState().messages['0x7a8b9c'];
       expect(msgs).toHaveLength(1);
@@ -423,8 +423,8 @@ describe('store integration', () => {
       // 6. Switch to core buffer
       useBufferStore.getState().setActiveBuffer('0x1a2b3c');
 
-      // 7. Another message arrives for channel -> unread increments
-      const lineMsg2 = parseMessage(createLineAddedEvent());
+      // 7. Another (distinct) message arrives for channel -> unread increments
+      const lineMsg2 = parseMessage(createLineAddedEvent(1));
       handleEvent(lineMsg2);
       expect(useBufferStore.getState().buffers['0x7a8b9c'].unreadCount).toBe(1);
       expect(useMessageStore.getState().messages['0x7a8b9c']).toHaveLength(2);
