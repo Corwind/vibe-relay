@@ -11,12 +11,12 @@ vi.mock('react-virtuoso', () => ({
   Virtuoso: ({
     data,
     itemContent,
-    startReached,
+    atTopStateChange,
     components,
   }: {
     data: unknown[];
     itemContent: (index: number, item: unknown) => React.ReactNode;
-    startReached?: () => void;
+    atTopStateChange?: (atTop: boolean) => void;
     components?: { Header?: React.ComponentType };
     [key: string]: unknown;
   }) => {
@@ -27,8 +27,8 @@ vi.mock('react-virtuoso', () => ({
         {data.map((item, i) => (
           <div key={i}>{itemContent(i, item)}</div>
         ))}
-        {startReached && (
-          <button data-testid="start-reached-trigger" onClick={() => startReached()}>
+        {atTopStateChange && (
+          <button data-testid="start-reached-trigger" onClick={() => atTopStateChange(true)}>
             Load more
           </button>
         )}

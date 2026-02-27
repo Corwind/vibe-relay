@@ -7,6 +7,13 @@ import { DayDivider } from './DayDivider';
 import { Loader2 } from 'lucide-react';
 import type { WeechatMessage } from '@/store/types';
 
+/**
+ * Large initial value for Virtuoso's firstItemIndex.
+ * When items are prepended, we decrease this value so Virtuoso
+ * maintains the user's scroll position correctly.
+ */
+const FIRST_ITEM_INDEX_BASE = 100_000;
+
 function isSameDay(a: Date, b: Date): boolean {
   return (
     a.getFullYear() === b.getFullYear() &&
@@ -66,6 +73,10 @@ export const MessageList = memo(function MessageList({ onStartReached }: Message
 
   const items = useMemo(() => buildItems(messages), [messages]);
 
+  // Shift firstItemIndex down as items grow so Virtuoso keeps scroll position
+  // when messages are prepended at the top.
+  const firstItemIndex = Math.max(0, FIRST_ITEM_INDEX_BASE - items.length);
+
   const renderItem = useCallback((_index: number, item: ListItem) => {
     if (item.type === 'divider') {
       return <DayDivider date={item.date} />;
@@ -76,6 +87,14 @@ export const MessageList = memo(function MessageList({ onStartReached }: Message
   const Header = useCallback(() => (
     <HistoryHeader loadingOlder={loadingOlder} hasMoreMessages={hasMoreMessages} />
   ), [loadingOlder, hasMoreMessages]);
+
+  // Use atTopStateChange for reliable scroll-to-top detection.
+  // startReached can miss re-fires after prepending items with alignToBottom.
+  const handleAtTopStateChange = useCallback((atTop: boolean) => {
+    if (atTop) {
+      onStartReached?.();
+    }
+  }, [onStartReached]);
 
   if (messages.length === 0) {
     return (
@@ -89,8 +108,10 @@ export const MessageList = memo(function MessageList({ onStartReached }: Message
     <Virtuoso
       ref={virtuosoRef}
       data={items}
+      firstItemIndex={firstItemIndex}
+      initialTopMostItemIndex={items.length - 1}
       itemContent={renderItem}
-      startReached={onStartReached}
+      atTopStateChange={handleAtTopStateChange}
       components={{ Header }}
       followOutput="smooth"
       alignToBottom
