@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MessageItem } from '../MessageItem';
 import { useSettingsStore } from '@/store/settings-store';
+import { nickColor } from '@/lib/nick-color';
 import type { WeechatMessage } from '@/store/types';
 
 function makeMessage(overrides: Partial<WeechatMessage> = {}): WeechatMessage {
@@ -34,11 +35,18 @@ describe('MessageItem', () => {
     expect(screen.getByTestId('message-body')).toHaveTextContent('Hello, world!');
   });
 
+  it('applies nick color to the prefix', () => {
+    render(<MessageItem message={makeMessage()} />);
+
+    const nickEl = screen.getByTestId('message-nick');
+    expect(nickEl).toHaveStyle({ color: nickColor('alice') });
+  });
+
   it('renders with formatted spans when available', () => {
     const msg = makeMessage({
       spans: [
         { text: 'Hello, ', bold: true },
-        { text: 'world!', fg: 4 },
+        { text: 'world!', fgColor: '#ff0000' },
       ],
     });
 
@@ -76,5 +84,18 @@ describe('MessageItem', () => {
     render(<MessageItem message={makeMessage()} />);
 
     expect(screen.getByText(/\d{2}:\d{2}/)).toBeInTheDocument();
+  });
+
+  it('renders prefixSpans through FormattedText', () => {
+    const msg = makeMessage({
+      prefixSpans: [{ text: 'alice', fgColor: '#2980b9' }],
+    });
+
+    render(<MessageItem message={msg} />);
+
+    const nickEl = screen.getByTestId('message-nick');
+    const innerSpan = nickEl.querySelector('span');
+    expect(innerSpan).toHaveTextContent('alice');
+    expect(innerSpan).toHaveStyle({ color: '#2980b9' });
   });
 });

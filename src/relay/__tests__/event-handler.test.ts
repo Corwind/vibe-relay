@@ -323,6 +323,61 @@ describe('event-handler', () => {
       expect(msgs[0].prefix).toBe('testuser');
     });
 
+    it('parses WeeChat color codes from prefix and message', () => {
+      useBufferStore.getState().addBuffer({
+        id: '0xabc',
+        fullName: 'core.weechat',
+        shortName: 'weechat',
+        title: '',
+        type: 'server',
+        number: 1,
+        unreadCount: 0,
+        highlightCount: 0,
+        isActive: false,
+        nicklistVisible: true,
+        localVariables: {},
+      });
+
+      const hdata: WeechatHdata = {
+        path: 'line_data',
+        keys: [
+          { name: 'buffer', type: 'ptr' },
+          { name: 'date', type: 'tim' },
+          { name: 'prefix', type: 'str' },
+          { name: 'message', type: 'str' },
+          { name: 'highlight', type: 'chr' },
+          { name: 'displayed', type: 'chr' },
+        ],
+        entries: [
+          {
+            pointers: ['0xabc'],
+            values: {
+              buffer: '0xabc',
+              date: new Date('2024-01-15T10:30:00Z'),
+              // Prefix with WeeChat color codes: \x19F06@ \x19F@00006Bruce
+              prefix: '\x19F06@\x19F@00006Bruce',
+              message: '\x19F05Hello \x02bold\x02 world',
+              highlight: 0,
+              displayed: 1,
+            },
+          },
+        ],
+      };
+
+      handleEvent(makeHdataMessage('_buffer_line_added', hdata));
+      const msgs = useMessageStore.getState().messages['0xabc'];
+      expect(msgs).toHaveLength(1);
+      // prefix should be stripped of color codes
+      expect(msgs[0].prefix).toBe('@Bruce');
+      // message should be stripped of color codes
+      expect(msgs[0].message).toBe('Hello bold world');
+      // prefixSpans and spans should be populated
+      expect(msgs[0].prefixSpans).toBeDefined();
+      expect(msgs[0].prefixSpans!.length).toBeGreaterThan(0);
+      expect(msgs[0].spans).toBeDefined();
+      expect(msgs[0].spans!.length).toBeGreaterThan(0);
+    });
+
     it('increments unread count for non-active buffer', () => {
       useBufferStore.getState().addBuffer({
         id: '0xabc',
@@ -497,6 +552,209 @@ describe('event-handler', () => {
       const nicks = useNicklistStore.getState().nicklists['0xabc'];
       expect(nicks).toHaveLength(1);
       expect(nicks[0].name).toBe('newuser');
+    });
+  });
+
+  describe('nicklist with custom id (nicklist_{pointer})', () => {
+    it('routes nicklist_0xabc to handleNicklist', () => {
+      const hdata: WeechatHdata = {
+        path: 'nicklist_item',
+        keys: [
+          { name: 'group', type: 'chr' },
+          { name: 'level', type: 'int' },
+          { name: 'name', type: 'str' },
+          { name: 'color', type: 'str' },
+          { name: 'prefix', type: 'str' },
+          { name: 'prefix_color', type: 'str' },
+          { name: 'visible', type: 'chr' },
+        ],
+        entries: [
+          {
+            pointers: ['0xabc'],
+            values: {
+              group: 0,
+              level: 0,
+              name: 'alice',
+              color: '',
+              prefix: '@',
+              prefix_color: 'green',
+              visible: 1,
+            },
+          },
+        ],
+      };
+
+      handleEvent(makeHdataMessage('nicklist_0xabc', hdata));
+      const nicks = useNicklistStore.getState().nicklists['0xabc'];
+      expect(nicks).toHaveLength(1);
+      expect(nicks[0].name).toBe('alice');
+    });
+
+    it('routes nicklist_irc.libera.#test to handleNicklist', () => {
+      const hdata: WeechatHdata = {
+        path: 'nicklist_item',
+        keys: [
+          { name: 'group', type: 'chr' },
+          { name: 'level', type: 'int' },
+          { name: 'name', type: 'str' },
+          { name: 'color', type: 'str' },
+          { name: 'prefix', type: 'str' },
+          { name: 'prefix_color', type: 'str' },
+          { name: 'visible', type: 'chr' },
+        ],
+        entries: [
+          {
+            pointers: ['0xdef'],
+            values: {
+              group: 0,
+              level: 0,
+              name: 'bob',
+              color: '',
+              prefix: '',
+              prefix_color: '',
+              visible: 1,
+            },
+          },
+        ],
+      };
+
+      handleEvent(makeHdataMessage('nicklist_irc.libera.#test', hdata));
+      const nicks = useNicklistStore.getState().nicklists['0xdef'];
+      expect(nicks).toHaveLength(1);
+      expect(nicks[0].name).toBe('bob');
+    });
+  });
+
+  describe('hotlist (listhotlist)', () => {
+    it('updates unread and highlight counts from hotlist data', () => {
+      // Set up buffers first
+      useBufferStore.getState().addBuffer({
+        id: '0xbuf1',
+        fullName: 'irc.libera.#channel1',
+        shortName: '#channel1',
+        title: '',
+        type: 'channel',
+        number: 2,
+        unreadCount: 0,
+        highlightCount: 0,
+        isActive: false,
+        nicklistVisible: true,
+        localVariables: {},
+      });
+      useBufferStore.getState().addBuffer({
+        id: '0xbuf2',
+        fullName: 'irc.libera.#channel2',
+        shortName: '#channel2',
+        title: '',
+        type: 'channel',
+        number: 3,
+        unreadCount: 0,
+        highlightCount: 0,
+        isActive: false,
+        nicklistVisible: true,
+        localVariables: {},
+      });
+
+      const hdata: WeechatHdata = {
+        path: 'hotlist',
+        keys: [
+          { name: 'buffer', type: 'ptr' },
+          { name: 'count', type: 'arr' },
+        ],
+        entries: [
+          {
+            pointers: ['0xhotlist1'],
+            values: {
+              buffer: '0xbuf1',
+              count: { type: 'int', values: [0, 5, 2, 1] } as WeechatArray,
+            },
+          },
+          {
+            pointers: ['0xhotlist2'],
+            values: {
+              buffer: '0xbuf2',
+              count: { type: 'int', values: [3, 10, 0, 0] } as WeechatArray,
+            },
+          },
+        ],
+      };
+
+      handleEvent(makeHdataMessage('listhotlist', hdata));
+
+      const bufs = useBufferStore.getState().buffers;
+      // buf1: messages(5) + private(2) = 7 unread, 1 highlight
+      expect(bufs['0xbuf1'].unreadCount).toBe(7);
+      expect(bufs['0xbuf1'].highlightCount).toBe(1);
+      // buf2: messages(10) + private(0) = 10 unread, 0 highlight
+      expect(bufs['0xbuf2'].unreadCount).toBe(10);
+      expect(bufs['0xbuf2'].highlightCount).toBe(0);
+    });
+
+    it('ignores hotlist entries for unknown buffers', () => {
+      const hdata: WeechatHdata = {
+        path: 'hotlist',
+        keys: [
+          { name: 'buffer', type: 'ptr' },
+          { name: 'count', type: 'arr' },
+        ],
+        entries: [
+          {
+            pointers: ['0xhotlist1'],
+            values: {
+              buffer: '0xunknown',
+              count: { type: 'int', values: [0, 5, 2, 1] } as WeechatArray,
+            },
+          },
+        ],
+      };
+
+      // Should not throw
+      handleEvent(makeHdataMessage('listhotlist', hdata));
+      expect(useBufferStore.getState().buffers['0xunknown']).toBeUndefined();
+    });
+  });
+
+  describe('message ID stability', () => {
+    it('generates stable message IDs based on content', () => {
+      const tagsArray: WeechatArray = {
+        type: 'str',
+        values: ['irc_privmsg'],
+      };
+
+      const hdata: WeechatHdata = {
+        path: 'buffer/own_lines/last_line/data',
+        keys: [
+          { name: 'buffer', type: 'ptr' },
+          { name: 'date', type: 'tim' },
+          { name: 'prefix', type: 'str' },
+          { name: 'message', type: 'str' },
+          { name: 'highlight', type: 'chr' },
+          { name: 'tags_array', type: 'arr' },
+          { name: 'displayed', type: 'chr' },
+        ],
+        entries: [
+          {
+            pointers: ['0xbuf', '0xlines', '0xline1', '0xdata1'],
+            values: {
+              buffer: '0xbuf',
+              date: new Date('2024-01-15T10:00:00Z'),
+              prefix: 'alice',
+              message: 'Hello world',
+              highlight: 0,
+              tags_array: tagsArray,
+              displayed: 1,
+            },
+          },
+        ],
+      };
+
+      // Process same message twice
+      handleEvent(makeHdataMessage('listlines', hdata));
+      handleEvent(makeHdataMessage('listlines', hdata));
+
+      const msgs = useMessageStore.getState().messages['0xbuf'];
+      // Should be deduplicated to 1 message
+      expect(msgs).toHaveLength(1);
     });
   });
 

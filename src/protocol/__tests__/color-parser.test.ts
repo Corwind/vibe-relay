@@ -177,6 +177,40 @@ describe('parseColors', () => {
     });
   });
 
+  describe('typical WeeChat prefix strings', () => {
+    it('parses a nick prefix like F06@F@00006Bruce', () => {
+      // Simulates \x19F06@\x19F@00006Bruce
+      const text = '\x19F06@\x19F@00006Bruce';
+      const segments = parseColors(text);
+      const plainText = segments.map((s) => s.text).join('');
+      expect(plainText).toBe('@Bruce');
+    });
+
+    it('strips color codes and returns clean nick text', () => {
+      // Prefix with color codes wrapping the nick
+      const text = '\x19F05alice';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(1);
+      expect(segments[0].text).toBe('alice');
+    });
+
+    it('handles prefix with multiple color changes', () => {
+      const text = '\x19F03@\x19F08alice';
+      const segments = parseColors(text);
+      const plainText = segments.map((s) => s.text).join('');
+      expect(plainText).toBe('@alice');
+      expect(segments).toHaveLength(2);
+    });
+
+    it('handles prefix with extended color for nick', () => {
+      const text = '\x19F@00142user123';
+      const segments = parseColors(text);
+      expect(segments).toHaveLength(1);
+      expect(segments[0].text).toBe('user123');
+      expect(segments[0].fgColor).toBeDefined();
+    });
+  });
+
   describe('edge cases', () => {
     it('handles consecutive control codes with no text between', () => {
       const text = '\x02\x02visible';

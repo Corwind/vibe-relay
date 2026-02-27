@@ -5,6 +5,7 @@ import { MediaEmbed } from './MediaEmbed';
 import { useMediaEmbed } from '@/hooks/use-media-embed';
 import { useSettingsStore } from '@/store/settings-store';
 import { cn } from '@/lib/utils';
+import { nickColor } from '@/lib/nick-color';
 
 interface MessageItemProps {
   message: WeechatMessage;
@@ -56,7 +57,11 @@ export const MessageItem = memo(function MessageItem({ message }: MessageItemPro
             </span>
           ) : (
             <>
-              <span className="font-medium" data-testid="message-nick">
+              <span
+                className="font-medium"
+                data-testid="message-nick"
+                style={{ color: nickColor(message.prefix) }}
+              >
                 {message.prefixSpans ? (
                   <FormattedText spans={message.prefixSpans} />
                 ) : (

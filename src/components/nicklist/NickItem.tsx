@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import type { NickEntry } from '@/store/types';
+import { nickColor } from '@/lib/nick-color';
 
 interface NickItemProps {
   nick: NickEntry;
@@ -13,7 +14,7 @@ export const NickItem = memo(function NickItem({ nick }: NickItemProps) {
           {nick.prefix}
         </span>
       )}
-      <span className="truncate" style={nick.color ? { color: nick.color } : undefined}>
+      <span className="truncate" style={{ color: nickColor(nick.name) }}>
         {nick.name}
       </span>
     </div>

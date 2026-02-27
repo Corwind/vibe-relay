@@ -17,8 +17,8 @@ export interface WeechatBuffer {
 
 export interface TextSpan {
   text: string;
-  fg?: number;
-  bg?: number;
+  fgColor?: string;
+  bgColor?: string;
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;

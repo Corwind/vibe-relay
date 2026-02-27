@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import type { TextSpan } from '@/store/types';
-import { IRC_COLORS, xterm256Color } from '@/lib/constants';
 
 interface FormattedTextProps {
   spans: TextSpan[];
@@ -9,14 +8,14 @@ interface FormattedTextProps {
 function spanStyle(span: TextSpan): React.CSSProperties {
   const style: React.CSSProperties = {};
 
-  const fg = span.reverse ? span.bg : span.fg;
-  const bg = span.reverse ? span.fg : span.bg;
+  const fg = span.reverse ? span.bgColor : span.fgColor;
+  const bg = span.reverse ? span.fgColor : span.bgColor;
 
-  if (fg !== undefined) {
-    style.color = fg < 16 ? IRC_COLORS[fg] : xterm256Color(fg);
+  if (fg) {
+    style.color = fg;
   }
-  if (bg !== undefined) {
-    style.backgroundColor = bg < 16 ? IRC_COLORS[bg] : xterm256Color(bg);
+  if (bg) {
+    style.backgroundColor = bg;
   }
   if (span.bold) style.fontWeight = 'bold';
   if (span.italic) style.fontStyle = 'italic';

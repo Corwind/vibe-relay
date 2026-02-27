@@ -3,11 +3,13 @@ import type {
   WeechatHdata,
   WeechatHashtable,
   WeechatArray,
+  FormattedSegment,
 } from '@/protocol/types';
+import { parseColors } from '@/protocol/color-parser';
 import { useBufferStore } from '@/store/buffer-store';
 import { useMessageStore } from '@/store/message-store';
 import { useNicklistStore } from '@/store/nicklist-store';
-import type { WeechatBuffer, WeechatMessage, NickEntry } from '@/store/types';
+import type { WeechatBuffer, WeechatMessage, NickEntry, TextSpan } from '@/store/types';
 import { inferBufferType } from './helpers';
 
 export function handleEvent(message: ProtocolMessage): void {
@@ -43,7 +45,13 @@ export function handleEvent(message: ProtocolMessage): void {
     case '_nicklist_diff':
       handleNicklistDiff(objects);
       break;
+    case 'listhotlist':
+      handleHotlist(objects);
+      break;
     default:
+      if (id.startsWith('nicklist')) {
+        handleNicklist(objects);
+      }
       break;
   }
 }
@@ -222,6 +230,28 @@ function handleNicklistDiff(objects: ProtocolMessage['objects']): void {
   }
 }
 
+function handleHotlist(objects: ProtocolMessage['objects']): void {
+  for (const obj of objects) {
+    if (obj.type !== 'hda') continue;
+    const hdata = obj.value as WeechatHdata;
+    const bufStore = useBufferStore.getState();
+
+    for (const entry of hdata.entries) {
+      const bufferPointer = entry.values['buffer'] as string;
+      const countArray = entry.values['count'] as WeechatArray | undefined;
+
+      if (!countArray || !bufStore.buffers[bufferPointer]) continue;
+
+      const counts = countArray.values as number[];
+      // counts: [low_messages, messages, private_messages, highlights]
+      const unreadCount = (counts[1] ?? 0) + (counts[2] ?? 0);
+      const highlightCount = counts[3] ?? 0;
+
+      bufStore.updateBuffer(bufferPointer, { unreadCount, highlightCount });
+    }
+  }
+}
+
 function hdataEntryToBuffer(entry: WeechatHdata['entries'][0]): WeechatBuffer {
   const localVarsRaw = entry.values['local_variables'] as WeechatHashtable | undefined;
   const localVariables: Record<string, string> = {};
@@ -251,6 +281,29 @@ function hdataEntryToBuffer(entry: WeechatHdata['entries'][0]): WeechatBuffer {
   };
 }
 
+function segmentsToSpans(segments: FormattedSegment[]): TextSpan[] {
+  return segments.map((seg) => {
+    const span: TextSpan = { text: seg.text };
+    if (seg.fgColor) span.fgColor = seg.fgColor;
+    if (seg.bgColor) span.bgColor = seg.bgColor;
+    if (seg.bold) span.bold = true;
+    if (seg.italic) span.italic = true;
+    if (seg.underline) span.underline = true;
+    if (seg.strikethrough) span.strikethrough = true;
+    if (seg.reverse) span.reverse = true;
+    return span;
+  });
+}
+
+/** Simple string hash (djb2) for generating stable message IDs. */
+function simpleHash(str: string): string {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash + str.charCodeAt(i)) | 0;
+  }
+  return (hash >>> 0).toString(36);
+}
+
 function hdataEntryToMessage(
   entry: WeechatHdata['entries'][0],
   bufferPointer: string,
@@ -258,18 +311,35 @@ function hdataEntryToMessage(
   const tagsArray = entry.values['tags_array'] as WeechatArray | undefined;
   const tags: string[] = tagsArray ? (tagsArray.values as string[]) : [];
 
+  const rawPrefix = (entry.values['prefix'] as string) ?? '';
+  const rawMessage = (entry.values['message'] as string) ?? '';
+
+  const prefixSegments = parseColors(rawPrefix);
+  const messageSegments = parseColors(rawMessage);
+
+  const plainPrefix = prefixSegments.map((s) => s.text).join('');
+  const plainMessage = messageSegments.map((s) => s.text).join('');
+
+  const dateVal = entry.values['date'];
+  const dateMs =
+    dateVal instanceof Date ? dateVal.getTime() : (dateVal as number) * 1000;
+  const msgHash = simpleHash(plainMessage);
+  const stableId = `${bufferPointer}-${dateMs}-${plainPrefix}-${msgHash}`;
+
   return {
-    id: `${bufferPointer}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: stableId,
     bufferId: bufferPointer,
     date:
       entry.values['date'] instanceof Date
         ? (entry.values['date'] as Date)
         : new Date((entry.values['date'] as number) * 1000),
-    prefix: (entry.values['prefix'] as string) ?? '',
-    message: (entry.values['message'] as string) ?? '',
+    prefix: plainPrefix,
+    message: plainMessage,
     tags,
     highlight: (entry.values['highlight'] as number) !== 0,
     displayed: (entry.values['displayed'] as number) !== 0,
+    prefixSpans: segmentsToSpans(prefixSegments),
+    spans: segmentsToSpans(messageSegments),
   };
 }
 

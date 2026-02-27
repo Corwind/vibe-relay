@@ -18,8 +18,8 @@ describe('FormattedText', () => {
     expect(screen.getByText('World')).toBeInTheDocument();
   });
 
-  it('applies foreground color from IRC palette', () => {
-    const spans: TextSpan[] = [{ text: 'Red text', fg: 4 }];
+  it('applies foreground color from string', () => {
+    const spans: TextSpan[] = [{ text: 'Red text', fgColor: '#ff0000' }];
 
     render(<FormattedText spans={spans} />);
 
@@ -27,8 +27,8 @@ describe('FormattedText', () => {
     expect(span).toHaveStyle({ color: '#ff0000' });
   });
 
-  it('applies background color', () => {
-    const spans: TextSpan[] = [{ text: 'Highlighted', bg: 8 }];
+  it('applies background color from string', () => {
+    const spans: TextSpan[] = [{ text: 'Highlighted', bgColor: '#ffff00' }];
 
     render(<FormattedText spans={spans} />);
 
@@ -73,7 +73,9 @@ describe('FormattedText', () => {
   });
 
   it('swaps fg/bg when reverse is set', () => {
-    const spans: TextSpan[] = [{ text: 'Reversed', fg: 4, bg: 0, reverse: true }];
+    const spans: TextSpan[] = [
+      { text: 'Reversed', fgColor: '#ff0000', bgColor: '#ffffff', reverse: true },
+    ];
 
     render(<FormattedText spans={spans} />);
 
@@ -82,13 +84,12 @@ describe('FormattedText', () => {
     expect(span).toHaveStyle({ color: '#ffffff', backgroundColor: '#ff0000' });
   });
 
-  it('handles xterm-256 colors', () => {
-    const spans: TextSpan[] = [{ text: 'Xterm', fg: 196 }];
+  it('renders span without style when no formatting', () => {
+    const spans: TextSpan[] = [{ text: 'Plain' }];
 
     render(<FormattedText spans={spans} />);
 
-    const span = screen.getByText('Xterm');
-    // Color index 196 = (196-16) = 180, r=180/36*51=255, g=(180/6%6)*51=0, b=(180%6)*51=0
-    expect(span).toHaveStyle({ color: 'rgb(255,0,0)' });
+    const span = screen.getByText('Plain');
+    expect(span.tagName).toBe('SPAN');
   });
 });
