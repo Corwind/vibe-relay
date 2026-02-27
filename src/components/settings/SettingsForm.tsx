@@ -1,98 +1,126 @@
-import { memo } from 'react';
+import { memo, useState, useRef, useEffect, useCallback } from 'react';
 import { useSettingsStore } from '@/store/settings-store';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { themes } from '@/lib/themes';
+import { themes, getThemeById, type ThemeDefinition } from '@/lib/themes';
 
-function ThemeSwatch({ color, label }: { color: string; label: string }) {
+const SWATCH_KEYS = ['background', 'primary', 'accent', 'destructive'] as const;
+
+function ThemeSwatches({ theme }: { theme: ThemeDefinition }) {
   return (
-    <span
-      className="inline-block h-3 w-3 rounded-full border border-foreground/20"
-      style={{ backgroundColor: color }}
-      title={label}
-      aria-label={label}
-    />
+    <span className="inline-flex gap-1">
+      {SWATCH_KEYS.map((key) => (
+        <span
+          key={key}
+          data-testid="theme-swatch-dot"
+          className="inline-block h-3 w-3 rounded-full border border-foreground/20"
+          style={{ backgroundColor: theme.colors[key] }}
+        />
+      ))}
+    </span>
   );
 }
 
 function ThemePicker() {
   const theme = useSettingsStore((s) => s.theme);
   const setTheme = useSettingsStore((s) => s.setTheme);
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const lightThemes = themes.filter((t) => !t.isDark);
   const darkThemes = themes.filter((t) => t.isDark);
 
+  const currentTheme = getThemeById(theme);
+  const displayName = theme === 'system' ? 'System (Auto)' : (currentTheme?.name ?? theme);
+
+  const handleSelect = useCallback(
+    (id: string) => {
+      setTheme(id);
+      setOpen(false);
+    },
+    [setTheme],
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    function onClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [open]);
+
   return (
-    <div className="space-y-3">
-      {/* System option */}
-      <button
-        type="button"
-        onClick={() => setTheme('system')}
-        className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition-colors ${
-          theme === 'system'
-            ? 'border-primary bg-primary/10 font-medium'
-            : 'border-input hover:bg-accent/50'
-        }`}
-        data-testid="theme-option-system"
-      >
-        <span className="flex-1">System</span>
-        <span className="text-xs text-muted-foreground">Auto</span>
-      </button>
+    <div className="flex items-center justify-between">
+      <label className="text-sm">Theme</label>
+      <div className="relative" ref={containerRef}>
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          data-testid="theme-select"
+          className="flex items-center gap-2 rounded-md border border-input bg-background px-2 py-1 text-sm hover:bg-accent/50 transition-colors"
+        >
+          {currentTheme && <ThemeSwatches theme={currentTheme} />}
+          <span>{displayName}</span>
+          <svg className="h-3 w-3 opacity-60" viewBox="0 0 12 12" fill="none">
+            <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
 
-      {/* Light themes */}
-      <div className="space-y-1">
-        <p className="text-xs font-medium text-muted-foreground">Light</p>
-        <div className="space-y-1">
-          {lightThemes.map((t) => (
+        {open && (
+          <div
+            data-testid="theme-dropdown"
+            className="absolute right-0 top-full z-50 mt-1 max-h-64 w-56 overflow-y-auto rounded-md border border-input bg-popover p-1 shadow-md"
+          >
             <button
               type="button"
-              key={t.id}
-              onClick={() => setTheme(t.id)}
-              className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition-colors ${
-                theme === t.id
-                  ? 'border-primary bg-primary/10 font-medium'
-                  : 'border-input hover:bg-accent/50'
+              onClick={() => handleSelect('system')}
+              data-testid="theme-option-system"
+              data-selected={theme === 'system'}
+              className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors ${
+                theme === 'system' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
               }`}
-              data-testid={`theme-option-${t.id}`}
             >
-              <span className="flex-1">{t.name}</span>
-              <span className="flex gap-1">
-                <ThemeSwatch color={t.colors.background} label="background" />
-                <ThemeSwatch color={t.colors.primary} label="primary" />
-                <ThemeSwatch color={t.colors.accent} label="accent" />
-                <ThemeSwatch color={t.colors.destructive} label="destructive" />
-              </span>
+              System (Auto)
             </button>
-          ))}
-        </div>
-      </div>
 
-      {/* Dark themes */}
-      <div className="space-y-1">
-        <p className="text-xs font-medium text-muted-foreground">Dark</p>
-        <div className="space-y-1">
-          {darkThemes.map((t) => (
-            <button
-              type="button"
-              key={t.id}
-              onClick={() => setTheme(t.id)}
-              className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition-colors ${
-                theme === t.id
-                  ? 'border-primary bg-primary/10 font-medium'
-                  : 'border-input hover:bg-accent/50'
-              }`}
-              data-testid={`theme-option-${t.id}`}
-            >
-              <span className="flex-1">{t.name}</span>
-              <span className="flex gap-1">
-                <ThemeSwatch color={t.colors.background} label="background" />
-                <ThemeSwatch color={t.colors.primary} label="primary" />
-                <ThemeSwatch color={t.colors.accent} label="accent" />
-                <ThemeSwatch color={t.colors.destructive} label="destructive" />
-              </span>
-            </button>
-          ))}
-        </div>
+            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Light</div>
+            {lightThemes.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handleSelect(t.id)}
+                data-testid={`theme-option-${t.id}`}
+                data-selected={theme === t.id}
+                className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors ${
+                  theme === t.id ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
+                }`}
+              >
+                <ThemeSwatches theme={t} />
+                <span>{t.name}</span>
+              </button>
+            ))}
+
+            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Dark</div>
+            {darkThemes.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handleSelect(t.id)}
+                data-testid={`theme-option-${t.id}`}
+                data-selected={theme === t.id}
+                className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors ${
+                  theme === t.id ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
+                }`}
+              >
+                <ThemeSwatches theme={t} />
+                <span>{t.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
