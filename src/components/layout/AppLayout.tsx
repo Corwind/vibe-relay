@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { BufferList } from '@/components/buffers/BufferList';
 import { MessageList } from '@/components/messages/MessageList';
 import { NickList } from '@/components/nicklist/NickList';
@@ -17,6 +18,7 @@ import { useMessageStore } from '@/store/message-store';
 import { useRelay } from '@/hooks/use-relay';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useDocumentTitle } from '@/hooks/use-document-title';
+import { useHistoryStore } from '@/store/history-store';
 import type { ConnectionSettings } from '@/store/types';
 
 export function AppLayout() {
@@ -82,7 +84,12 @@ export function AppLayout() {
   // Load older messages when user scrolls to top
   const handleStartReached = useCallback(() => {
     if (!activeBufferId || connectionState !== 'connected') return;
-    fetchLines(activeBufferId, 200);
+    const historyState = useHistoryStore.getState();
+    const bufState = historyState.getBufferState(activeBufferId);
+    if (bufState.loadingOlder || !bufState.hasMoreMessages) return;
+    historyState.startLoading(activeBufferId);
+    const newCount = useHistoryStore.getState().getBufferState(activeBufferId).fetchedCount;
+    fetchLines(activeBufferId, newCount);
   }, [activeBufferId, connectionState, fetchLines]);
 
   // Fetch backlog + nicklist when switching buffers
@@ -139,35 +146,49 @@ export function AppLayout() {
 
   return (
     <div className="h-screen" data-testid="app-layout">
-      {/* Desktop layout: 3-column grid */}
-      <div className="hidden md:grid md:grid-cols-[250px_1fr_200px] h-full">
+      {/* Desktop layout: resizable 3-column panels */}
+      <PanelGroup
+        direction="horizontal"
+        autoSaveId="relay-panels"
+        className="hidden md:flex h-full"
+      >
         {/* Sidebar */}
-        <div className="border-r border-border overflow-hidden">{sidebarContent}</div>
+        <Panel id="sidebar" defaultSize={18} minSize={10} maxSize={30} order={1}>
+          <div className="h-full overflow-hidden">{sidebarContent}</div>
+        </Panel>
+
+        <PanelResizeHandle className="panel-resize-handle" />
 
         {/* Main content */}
-        <div className="flex flex-col overflow-hidden">
-          {activeBuffer && (
-            <div className="flex items-center gap-2 border-b border-border px-4 py-2">
-              <h2 className="font-medium text-sm">{activeBuffer.shortName}</h2>
-              {activeBuffer.title && (
-                <span className="text-xs text-muted-foreground truncate">{activeBuffer.title}</span>
-              )}
+        <Panel id="chat" minSize={40} order={2}>
+          <div className="flex flex-col h-full overflow-hidden">
+            {activeBuffer && (
+              <div className="flex items-center gap-2 border-b border-border px-4 py-2">
+                <h2 className="font-medium text-sm">{activeBuffer.shortName}</h2>
+                {activeBuffer.title && (
+                  <span className="text-xs text-muted-foreground truncate">{activeBuffer.title}</span>
+                )}
+              </div>
+            )}
+            <div className="flex-1 overflow-hidden">
+              <MessageList onStartReached={handleStartReached} />
             </div>
-          )}
-          <div className="flex-1 overflow-hidden">
-            <MessageList onStartReached={handleStartReached} />
+            <MessageInput
+              onSend={handleSend}
+              disabled={connectionState !== 'connected' || !activeBufferId}
+            />
           </div>
-          <MessageInput
-            onSend={handleSend}
-            disabled={connectionState !== 'connected' || !activeBufferId}
-          />
-        </div>
+        </Panel>
+
+        <PanelResizeHandle className="panel-resize-handle" />
 
         {/* Nicklist */}
-        <div className="border-l border-border overflow-hidden">
-          <NickList />
-        </div>
-      </div>
+        <Panel id="nicklist" defaultSize={15} minSize={8} maxSize={25} order={3}>
+          <div className="h-full overflow-hidden">
+            <NickList />
+          </div>
+        </Panel>
+      </PanelGroup>
 
       {/* Mobile layout: single column with Sheet sidebar */}
       <div className="flex flex-col h-full md:hidden">

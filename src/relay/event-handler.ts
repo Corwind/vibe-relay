@@ -9,6 +9,7 @@ import { parseColors } from '@/protocol/color-parser';
 import { useBufferStore } from '@/store/buffer-store';
 import { useMessageStore } from '@/store/message-store';
 import { useNicklistStore } from '@/store/nicklist-store';
+import { useHistoryStore } from '@/store/history-store';
 import type { WeechatBuffer, WeechatMessage, NickEntry, TextSpan } from '@/store/types';
 import { inferBufferType } from './helpers';
 
@@ -79,6 +80,7 @@ function handleLineList(objects: ProtocolMessage['objects']): void {
     if (obj.type !== 'hda') continue;
     const hdata = obj.value as WeechatHdata;
     const msgStore = useMessageStore.getState();
+    const historyStore = useHistoryStore.getState();
 
     // Group messages by buffer pointer
     const byBuffer = new Map<string, WeechatMessage[]>();
@@ -93,7 +95,11 @@ function handleLineList(objects: ProtocolMessage['objects']): void {
     for (const [bufferId, messages] of byBuffer) {
       // WeeChat returns lines newest-first; reverse to chronological order
       messages.reverse();
+      const countBefore = (msgStore.messages[bufferId] ?? []).length;
       msgStore.prependMessages(bufferId, messages);
+      const countAfter = (useMessageStore.getState().messages[bufferId] ?? []).length;
+      const receivedNew = countAfter > countBefore;
+      historyStore.finishLoading(bufferId, receivedNew);
     }
   }
 }

@@ -4,6 +4,7 @@ import { useConnectionStore } from '@/store/connection-store';
 import { useMessageStore } from '@/store/message-store';
 import { useBufferStore } from '@/store/buffer-store';
 import { useNicklistStore } from '@/store/nicklist-store';
+import { useHistoryStore } from '@/store/history-store';
 import type { ConnectionSettings } from '@/store/types';
 
 export function useRelay() {
@@ -11,6 +12,7 @@ export function useRelay() {
 
   const clearAllMessages = useMessageStore((s) => s.clearAll);
   const clearAllNicklists = useNicklistStore((s) => s.clearAll);
+  const clearAllHistory = useHistoryStore((s) => s.resetAll);
 
   const connect = useCallback((settings: ConnectionSettings) => {
     // Disconnect any existing session
@@ -32,9 +34,10 @@ export function useRelay() {
     }
     clearAllMessages();
     clearAllNicklists();
+    clearAllHistory();
     useBufferStore.getState().setBuffers({});
     useBufferStore.getState().setActiveBuffer('');
-  }, [clearAllMessages, clearAllNicklists]);
+  }, [clearAllMessages, clearAllNicklists, clearAllHistory]);
 
   const sendInput = useCallback((buffer: string, text: string) => {
     sessionRef.current?.sendInput(buffer, text);

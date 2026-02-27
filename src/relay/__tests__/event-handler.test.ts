@@ -3,6 +3,7 @@ import { handleEvent } from '../event-handler';
 import { useBufferStore } from '@/store/buffer-store';
 import { useMessageStore } from '@/store/message-store';
 import { useNicklistStore } from '@/store/nicklist-store';
+import { useHistoryStore } from '@/store/history-store';
 import type {
   WeechatMessage as ProtocolMessage,
   WeechatHdata,
@@ -30,6 +31,7 @@ describe('event-handler', () => {
     useBufferStore.setState({ buffers: {}, activeBufferId: null });
     useMessageStore.getState().clearAll();
     useNicklistStore.getState().clearAll();
+    useHistoryStore.getState().resetAll();
   });
 
   describe('buffer list (listbuffers)', () => {
@@ -203,6 +205,80 @@ describe('event-handler', () => {
       // Older message should be first (prepended)
       expect(msgs[0].message).toBe('Older message');
       expect(msgs[1].message).toBe('Existing message');
+    });
+
+    it('marks hasMoreMessages true when new messages are received', () => {
+      useHistoryStore.getState().startLoading('0xbuf');
+
+      const hdata: WeechatHdata = {
+        path: 'buffer/own_lines/last_line/data',
+        keys: [
+          { name: 'buffer', type: 'ptr' },
+          { name: 'date', type: 'tim' },
+          { name: 'prefix', type: 'str' },
+          { name: 'message', type: 'str' },
+          { name: 'highlight', type: 'chr' },
+          { name: 'displayed', type: 'chr' },
+        ],
+        entries: [
+          {
+            pointers: ['0xbuf', '0xlines', '0xline1', '0xdata1'],
+            values: {
+              buffer: '0xbuf',
+              date: new Date('2024-01-15T09:00:00Z'),
+              prefix: 'alice',
+              message: 'A message',
+              highlight: 0,
+              displayed: 1,
+            },
+          },
+        ],
+      };
+
+      handleEvent(makeHdataMessage('listlines', hdata));
+      const histState = useHistoryStore.getState().getBufferState('0xbuf');
+      expect(histState.loadingOlder).toBe(false);
+      expect(histState.hasMoreMessages).toBe(true);
+    });
+
+    it('marks hasMoreMessages false when all messages are duplicates', () => {
+      // Pre-populate via the event handler so the IDs match
+      const hdata: WeechatHdata = {
+        path: 'buffer/own_lines/last_line/data',
+        keys: [
+          { name: 'buffer', type: 'ptr' },
+          { name: 'date', type: 'tim' },
+          { name: 'prefix', type: 'str' },
+          { name: 'message', type: 'str' },
+          { name: 'highlight', type: 'chr' },
+          { name: 'displayed', type: 'chr' },
+        ],
+        entries: [
+          {
+            pointers: ['0xbuf', '0xlines', '0xline1', '0xdata1'],
+            values: {
+              buffer: '0xbuf',
+              date: new Date('2024-01-15T10:00:00Z'),
+              prefix: 'alice',
+              message: 'Hello',
+              highlight: 0,
+              displayed: 1,
+            },
+          },
+        ],
+      };
+
+      // First load populates the buffer
+      handleEvent(makeHdataMessage('listlines', hdata));
+      expect(useMessageStore.getState().messages['0xbuf']).toHaveLength(1);
+
+      // Now simulate a "load older" request that returns the same messages
+      useHistoryStore.getState().startLoading('0xbuf');
+      handleEvent(makeHdataMessage('listlines', hdata));
+
+      const histState = useHistoryStore.getState().getBufferState('0xbuf');
+      expect(histState.loadingOlder).toBe(false);
+      expect(histState.hasMoreMessages).toBe(false);
     });
   });
 
