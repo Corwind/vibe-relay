@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useSettingsStore } from '../settings-store';
+import { useSettingsStore, migrateThemeValue } from '../settings-store';
 
 describe('settings-store', () => {
   beforeEach(() => {
     // Reset to defaults
     useSettingsStore.setState({
-      theme: 'dark',
+      theme: 'default-dark',
       showTimestamps: true,
       timestampFormat: '24h',
       showJoinPart: false,
@@ -18,7 +18,7 @@ describe('settings-store', () => {
 
   it('has correct defaults', () => {
     const state = useSettingsStore.getState();
-    expect(state.theme).toBe('dark');
+    expect(state.theme).toBe('default-dark');
     expect(state.showTimestamps).toBe(true);
     expect(state.timestampFormat).toBe('24h');
     expect(state.showJoinPart).toBe(false);
@@ -28,9 +28,14 @@ describe('settings-store', () => {
     expect(state.savedConnection).toBeNull();
   });
 
-  it('sets theme', () => {
-    useSettingsStore.getState().setTheme('light');
-    expect(useSettingsStore.getState().theme).toBe('light');
+  it('sets theme to a named theme', () => {
+    useSettingsStore.getState().setTheme('dracula');
+    expect(useSettingsStore.getState().theme).toBe('dracula');
+  });
+
+  it('sets theme to system', () => {
+    useSettingsStore.getState().setTheme('system');
+    expect(useSettingsStore.getState().theme).toBe('system');
   });
 
   it('sets showTimestamps', () => {
@@ -80,5 +85,25 @@ describe('settings-store', () => {
     useSettingsStore.getState().setSavedConnection(conn);
     const saved = useSettingsStore.getState().savedConnection;
     expect(saved).not.toHaveProperty('password');
+  });
+});
+
+describe('migrateThemeValue', () => {
+  it('migrates "light" to "default-light"', () => {
+    expect(migrateThemeValue('light')).toBe('default-light');
+  });
+
+  it('migrates "dark" to "default-dark"', () => {
+    expect(migrateThemeValue('dark')).toBe('default-dark');
+  });
+
+  it('preserves "system"', () => {
+    expect(migrateThemeValue('system')).toBe('system');
+  });
+
+  it('preserves new theme IDs', () => {
+    expect(migrateThemeValue('dracula')).toBe('dracula');
+    expect(migrateThemeValue('nord')).toBe('nord');
+    expect(migrateThemeValue('default-dark')).toBe('default-dark');
   });
 });
