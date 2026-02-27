@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { Panel, Group as PanelGroup, Separator as PanelResizeHandle, useDefaultLayout } from 'react-resizable-panels';
 import { BufferList } from '@/components/buffers/BufferList';
 import { MessageList } from '@/components/messages/MessageList';
 import { NickList } from '@/components/nicklist/NickList';
@@ -116,6 +116,11 @@ export function AppLayout() {
     useBufferStore.getState().clearUnread(activeBufferId);
   }, [activeBufferId, connectionState, fetchLines, fetchNicklist]);
 
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: 'relay-panels',
+    storage: localStorage,
+  });
+
   const sidebarContent = (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between p-3">
@@ -148,19 +153,21 @@ export function AppLayout() {
     <div className="h-screen" data-testid="app-layout">
       {/* Desktop layout: resizable 3-column panels */}
       <PanelGroup
-        direction="horizontal"
-        autoSaveId="relay-panels"
+        id="relay-panels"
+        orientation="horizontal"
+        defaultLayout={defaultLayout}
+        onLayoutChanged={onLayoutChanged}
         className="hidden md:flex h-full"
       >
         {/* Sidebar */}
-        <Panel id="sidebar" defaultSize={18} minSize={10} maxSize={30} order={1}>
+        <Panel id="sidebar" defaultSize="18%" minSize="10%" maxSize="30%">
           <div className="h-full overflow-hidden">{sidebarContent}</div>
         </Panel>
 
         <PanelResizeHandle className="panel-resize-handle" />
 
         {/* Main content */}
-        <Panel id="chat" minSize={40} order={2}>
+        <Panel id="chat" minSize="40%">
           <div className="flex flex-col h-full overflow-hidden">
             {activeBuffer && (
               <div className="flex items-center gap-2 border-b border-border px-4 py-2">
@@ -183,7 +190,7 @@ export function AppLayout() {
         <PanelResizeHandle className="panel-resize-handle" />
 
         {/* Nicklist */}
-        <Panel id="nicklist" defaultSize={15} minSize={8} maxSize={25} order={3}>
+        <Panel id="nicklist" defaultSize="15%" minSize="8%" maxSize="25%">
           <div className="h-full overflow-hidden">
             <NickList />
           </div>
