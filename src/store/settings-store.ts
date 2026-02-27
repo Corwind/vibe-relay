@@ -8,6 +8,7 @@ interface SettingsStore {
   showJoinPart: boolean;
   mediaPreview: boolean;
   fontSize: number;
+  showEmojis: boolean;
   savedConnection: { host: string; port: number; ssl: boolean } | null;
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
   setShowTimestamps: (show: boolean) => void;
@@ -15,6 +16,7 @@ interface SettingsStore {
   setShowJoinPart: (show: boolean) => void;
   setMediaPreview: (enabled: boolean) => void;
   setFontSize: (size: number) => void;
+  setShowEmojis: (show: boolean) => void;
   setSavedConnection: (conn: { host: string; port: number; ssl: boolean }) => void;
   clearSavedConnection: () => void;
 }
@@ -28,6 +30,7 @@ export const useSettingsStore = create<SettingsStore>()(
       showJoinPart: false,
       mediaPreview: true,
       fontSize: 14,
+      showEmojis: true,
       savedConnection: null,
       setTheme: (theme) => set({ theme }),
       setShowTimestamps: (showTimestamps) => set({ showTimestamps }),
@@ -35,6 +38,7 @@ export const useSettingsStore = create<SettingsStore>()(
       setShowJoinPart: (showJoinPart) => set({ showJoinPart }),
       setMediaPreview: (mediaPreview) => set({ mediaPreview }),
       setFontSize: (fontSize) => set({ fontSize }),
+      setShowEmojis: (showEmojis) => set({ showEmojis }),
       setSavedConnection: (savedConnection) => set({ savedConnection }),
       clearSavedConnection: () => set({ savedConnection: null }),
     }),

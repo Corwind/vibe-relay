@@ -1,9 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { FormattedText } from '../FormattedText';
+import { useSettingsStore } from '@/store/settings-store';
 import type { TextSpan } from '@/store/types';
 
 describe('FormattedText', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ showEmojis: true });
+  });
+
   it('renders nothing when spans are empty', () => {
     const { container } = render(<FormattedText spans={[]} />);
     expect(container.innerHTML).toBe('');
@@ -91,5 +96,39 @@ describe('FormattedText', () => {
 
     const span = screen.getByText('Plain');
     expect(span.tagName).toBe('SPAN');
+  });
+
+  it('resolves emoji shortcodes when showEmojis is enabled', () => {
+    const spans: TextSpan[] = [{ text: 'hello :smile: world' }];
+
+    const { container } = render(<FormattedText spans={spans} />);
+
+    // The smile emoji should be rendered
+    const emojiSpan = container.querySelector('.emoji');
+    expect(emojiSpan).toBeInTheDocument();
+    expect(emojiSpan?.textContent).toBe('\u{1F604}');
+  });
+
+  it('does not resolve emoji shortcodes when showEmojis is disabled', () => {
+    useSettingsStore.setState({ showEmojis: false });
+    const spans: TextSpan[] = [{ text: 'hello :smile: world' }];
+
+    render(<FormattedText spans={spans} />);
+
+    // The shortcode should remain as text
+    expect(screen.getByText('hello :smile: world')).toBeInTheDocument();
+  });
+
+  it('preserves color formatting with emoji content', () => {
+    const spans: TextSpan[] = [
+      { text: ':heart:', fgColor: '#ff0000' },
+    ];
+
+    const { container } = render(<FormattedText spans={spans} />);
+
+    const coloredSpan = container.querySelector('span[style]');
+    expect(coloredSpan).toHaveStyle({ color: '#ff0000' });
+    const emojiSpan = coloredSpan?.querySelector('.emoji');
+    expect(emojiSpan).toBeInTheDocument();
   });
 });

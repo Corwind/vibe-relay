@@ -122,3 +122,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+.emoji {
+  font-size: 1.3em;
+  line-height: 1;
+  vertical-align: -0.1em;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}

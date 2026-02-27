@@ -1,5 +1,7 @@
 import { memo } from 'react';
 import type { TextSpan } from '@/store/types';
+import { useSettingsStore } from '@/store/settings-store';
+import { resolveEmojis, splitTextWithEmojis } from '@/lib/emoji';
 
 interface FormattedTextProps {
   spans: TextSpan[];
@@ -29,7 +31,30 @@ function spanStyle(span: TextSpan): React.CSSProperties {
   return style;
 }
 
+function renderTextWithEmojis(text: string, showEmojis: boolean): React.ReactNode {
+  if (!showEmojis) return text;
+
+  const resolved = resolveEmojis(text);
+  const segments = splitTextWithEmojis(resolved);
+
+  if (segments.length === 1 && segments[0].type === 'text') {
+    return resolved;
+  }
+
+  return segments.map((seg, j) =>
+    seg.type === 'emoji' ? (
+      <span key={j} className="emoji">
+        {seg.content}
+      </span>
+    ) : (
+      seg.content
+    ),
+  );
+}
+
 export const FormattedText = memo(function FormattedText({ spans }: FormattedTextProps) {
+  const showEmojis = useSettingsStore((s) => s.showEmojis);
+
   if (!spans || spans.length === 0) return null;
 
   return (
@@ -37,14 +62,15 @@ export const FormattedText = memo(function FormattedText({ spans }: FormattedTex
       {spans.map((span, i) => {
         const style = spanStyle(span);
         const hasStyle = Object.keys(style).length > 0;
+        const content = renderTextWithEmojis(span.text, showEmojis);
         if (hasStyle) {
           return (
             <span key={i} style={style}>
-              {span.text}
+              {content}
             </span>
           );
         }
-        return <span key={i}>{span.text}</span>;
+        return <span key={i}>{content}</span>;
       })}
     </>
   );

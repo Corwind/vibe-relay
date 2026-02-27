@@ -11,6 +11,7 @@ describe('settings-store', () => {
       showJoinPart: false,
       mediaPreview: true,
       fontSize: 14,
+      showEmojis: true,
       savedConnection: null,
     });
   });
@@ -23,6 +24,7 @@ describe('settings-store', () => {
     expect(state.showJoinPart).toBe(false);
     expect(state.mediaPreview).toBe(true);
     expect(state.fontSize).toBe(14);
+    expect(state.showEmojis).toBe(true);
     expect(state.savedConnection).toBeNull();
   });
 
@@ -54,6 +56,11 @@ describe('settings-store', () => {
   it('sets fontSize', () => {
     useSettingsStore.getState().setFontSize(18);
     expect(useSettingsStore.getState().fontSize).toBe(18);
+  });
+
+  it('sets showEmojis', () => {
+    useSettingsStore.getState().setShowEmojis(false);
+    expect(useSettingsStore.getState().showEmojis).toBe(false);
   });
 
   it('saves connection settings', () => {

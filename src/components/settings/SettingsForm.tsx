@@ -15,7 +15,9 @@ export const SettingsForm = memo(function SettingsForm() {
   const setTimestampFormat = useSettingsStore((s) => s.setTimestampFormat);
   const setShowJoinPart = useSettingsStore((s) => s.setShowJoinPart);
   const setMediaPreview = useSettingsStore((s) => s.setMediaPreview);
+  const showEmojis = useSettingsStore((s) => s.showEmojis);
   const setFontSize = useSettingsStore((s) => s.setFontSize);
+  const setShowEmojis = useSettingsStore((s) => s.setShowEmojis);
   const savedConnection = useSettingsStore((s) => s.savedConnection);
   const clearSavedConnection = useSettingsStore((s) => s.clearSavedConnection);
 
@@ -107,6 +109,18 @@ export const SettingsForm = memo(function SettingsForm() {
             type="checkbox"
             checked={mediaPreview}
             onChange={(e) => setMediaPreview(e.target.checked)}
+            className="h-4 w-4 rounded border-border"
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <label htmlFor="showEmojis" className="text-sm">
+            Emoji shortcodes
+          </label>
+          <input
+            id="showEmojis"
+            type="checkbox"
+            checked={showEmojis}
+            onChange={(e) => setShowEmojis(e.target.checked)}
             className="h-4 w-4 rounded border-border"
           />
         </div>
