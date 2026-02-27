@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useBufferStore } from '@/store/buffer-store';
 
-const BASE_TITLE = 'relay-client';
+const BASE_TITLE = 'vibe-relay';
 
 export function useDocumentTitle() {
   const buffers = useBufferStore((s) => s.buffers);

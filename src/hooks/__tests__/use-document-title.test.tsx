@@ -27,13 +27,13 @@ function makeBuffer(
 
 describe('useDocumentTitle', () => {
   beforeEach(() => {
-    document.title = 'relay-client';
+    document.title = 'vibe-relay';
     useBufferStore.setState({ buffers: {}, activeBufferId: null });
   });
 
   it('shows default title when no buffers', () => {
     renderHook(() => useDocumentTitle());
-    expect(document.title).toBe('relay-client');
+    expect(document.title).toBe('vibe-relay');
   });
 
   it('shows unread highlight count in title', () => {
@@ -44,7 +44,7 @@ describe('useDocumentTitle', () => {
       },
     });
     renderHook(() => useDocumentTitle());
-    expect(document.title).toBe('(4) relay-client');
+    expect(document.title).toBe('(4) vibe-relay');
   });
 
   it('clears count prefix when highlights go to zero', () => {
@@ -54,7 +54,7 @@ describe('useDocumentTitle', () => {
       },
     });
     const { rerender } = renderHook(() => useDocumentTitle());
-    expect(document.title).toBe('(2) relay-client');
+    expect(document.title).toBe('(2) vibe-relay');
 
     act(() => {
       useBufferStore.setState({
@@ -64,7 +64,7 @@ describe('useDocumentTitle', () => {
       });
     });
     rerender();
-    expect(document.title).toBe('relay-client');
+    expect(document.title).toBe('vibe-relay');
   });
 
   it('shows active buffer name in title', () => {
@@ -75,7 +75,7 @@ describe('useDocumentTitle', () => {
       activeBufferId: 'a',
     });
     renderHook(() => useDocumentTitle());
-    expect(document.title).toBe('#a - relay-client');
+    expect(document.title).toBe('#a - vibe-relay');
   });
 
   it('shows both unread count and active buffer name', () => {
@@ -87,6 +87,6 @@ describe('useDocumentTitle', () => {
       activeBufferId: 'b',
     });
     renderHook(() => useDocumentTitle());
-    expect(document.title).toBe('(5) #b - relay-client');
+    expect(document.title).toBe('(5) #b - vibe-relay');
   });
 });

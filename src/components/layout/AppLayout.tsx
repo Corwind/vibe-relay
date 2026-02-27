@@ -124,7 +124,7 @@ export function AppLayout() {
   const sidebarContent = (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between p-3">
-        <h1 className="text-sm font-bold">relay-client</h1>
+        <h1 className="text-sm font-bold">vibe-relay</h1>
         <Button size="icon" variant="ghost" onClick={() => setSettingsOpen(true)} aria-label="Settings">
           <Settings className="h-4 w-4" />
         </Button>
@@ -212,7 +212,7 @@ export function AppLayout() {
             </SheetContent>
           </Sheet>
           <h2 className="font-medium text-sm flex-1 truncate">
-            {activeBuffer?.shortName ?? 'relay-client'}
+            {activeBuffer?.shortName ?? 'vibe-relay'}
           </h2>
           <ConnectionStatus />
           <Sheet open={nicklistOpen} onOpenChange={setNicklistOpen}>
