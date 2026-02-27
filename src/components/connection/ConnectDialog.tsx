@@ -9,6 +9,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ConnectionError } from './ConnectionError';
+import { useSettingsStore } from '@/store/settings-store';
 import type { ConnectionSettings } from '@/store/types';
 
 interface ConnectDialogProps {
@@ -30,10 +31,11 @@ export function ConnectDialog({
   onConnect,
   connectionError,
 }: ConnectDialogProps) {
-  const [host, setHost] = useState('');
-  const [port, setPort] = useState('9001');
+  const savedConnection = useSettingsStore((s) => s.savedConnection);
+  const [host, setHost] = useState(savedConnection?.host ?? '');
+  const [port, setPort] = useState(savedConnection?.port?.toString() ?? '9001');
   const [password, setPassword] = useState('');
-  const [ssl, setSsl] = useState(true);
+  const [ssl, setSsl] = useState(savedConnection?.ssl ?? true);
   const [errors, setErrors] = useState<FormErrors>({});
 
   const validate = useCallback((): FormErrors => {

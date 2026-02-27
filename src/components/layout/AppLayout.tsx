@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Menu, Settings, Users } from 'lucide-react';
 import { useConnectionStore } from '@/store/connection-store';
+import { useSettingsStore } from '@/store/settings-store';
 import { useBufferStore } from '@/store/buffer-store';
 import { useMessageStore } from '@/store/message-store';
 import { useRelay } from '@/hooks/use-relay';
@@ -60,6 +61,11 @@ export function AppLayout() {
   const handleConnect = useCallback(
     (settings: ConnectionSettings) => {
       connect(settings);
+      useSettingsStore.getState().setSavedConnection({
+        host: settings.host,
+        port: settings.port,
+        ssl: settings.ssl,
+      });
       setConnectOpen(false);
     },
     [connect],

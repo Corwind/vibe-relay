@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { useSettingsStore } from '@/store/settings-store';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
 export const SettingsForm = memo(function SettingsForm() {
@@ -15,6 +16,8 @@ export const SettingsForm = memo(function SettingsForm() {
   const setShowJoinPart = useSettingsStore((s) => s.setShowJoinPart);
   const setMediaPreview = useSettingsStore((s) => s.setMediaPreview);
   const setFontSize = useSettingsStore((s) => s.setFontSize);
+  const savedConnection = useSettingsStore((s) => s.savedConnection);
+  const clearSavedConnection = useSettingsStore((s) => s.clearSavedConnection);
 
   return (
     <div className="space-y-6" data-testid="settings-form">
@@ -108,6 +111,26 @@ export const SettingsForm = memo(function SettingsForm() {
           />
         </div>
       </div>
+
+      {savedConnection && (
+        <>
+          <Separator />
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold">Connection</h3>
+            <p className="text-xs text-muted-foreground">
+              Saved: {savedConnection.host}:{savedConnection.port} ({savedConnection.ssl ? 'SSL' : 'plain'})
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearSavedConnection}
+              data-testid="clear-saved-connection"
+            >
+              Clear saved connection
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 });

@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConnectDialog } from '../ConnectDialog';
+import { useSettingsStore } from '@/store/settings-store';
 
 describe('ConnectDialog', () => {
   const defaultProps = {
@@ -9,6 +10,10 @@ describe('ConnectDialog', () => {
     onOpenChange: vi.fn(),
     onConnect: vi.fn(),
   };
+
+  beforeEach(() => {
+    useSettingsStore.setState({ savedConnection: null });
+  });
 
   it('renders all form fields', () => {
     render(<ConnectDialog {...defaultProps} />);
@@ -75,5 +80,26 @@ describe('ConnectDialog', () => {
 
     expect(screen.getByTestId('port-error')).toHaveTextContent('Port must be 1-65535');
     expect(defaultProps.onConnect).not.toHaveBeenCalled();
+  });
+
+  it('pre-fills from saved connection settings', () => {
+    useSettingsStore.setState({
+      savedConnection: { host: 'saved.example.com', port: 8443, ssl: false },
+    });
+    render(<ConnectDialog {...defaultProps} />);
+
+    expect(screen.getByTestId('host-input')).toHaveValue('saved.example.com');
+    expect(screen.getByTestId('port-input')).toHaveValue(8443);
+    expect(screen.getByTestId('ssl-checkbox')).not.toBeChecked();
+    expect(screen.getByTestId('password-input')).toHaveValue('');
+  });
+
+  it('uses defaults when no saved connection exists', () => {
+    render(<ConnectDialog {...defaultProps} />);
+
+    expect(screen.getByTestId('host-input')).toHaveValue('');
+    expect(screen.getByTestId('port-input')).toHaveValue(9001);
+    expect(screen.getByTestId('ssl-checkbox')).toBeChecked();
+    expect(screen.getByTestId('password-input')).toHaveValue('');
   });
 });

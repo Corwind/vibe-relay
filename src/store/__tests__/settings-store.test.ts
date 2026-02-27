@@ -11,6 +11,7 @@ describe('settings-store', () => {
       showJoinPart: false,
       mediaPreview: true,
       fontSize: 14,
+      savedConnection: null,
     });
   });
 
@@ -22,6 +23,7 @@ describe('settings-store', () => {
     expect(state.showJoinPart).toBe(false);
     expect(state.mediaPreview).toBe(true);
     expect(state.fontSize).toBe(14);
+    expect(state.savedConnection).toBeNull();
   });
 
   it('sets theme', () => {
@@ -52,5 +54,24 @@ describe('settings-store', () => {
   it('sets fontSize', () => {
     useSettingsStore.getState().setFontSize(18);
     expect(useSettingsStore.getState().fontSize).toBe(18);
+  });
+
+  it('saves connection settings', () => {
+    const conn = { host: 'relay.example.com', port: 9001, ssl: true };
+    useSettingsStore.getState().setSavedConnection(conn);
+    expect(useSettingsStore.getState().savedConnection).toEqual(conn);
+  });
+
+  it('clears saved connection', () => {
+    useSettingsStore.getState().setSavedConnection({ host: 'test', port: 443, ssl: false });
+    useSettingsStore.getState().clearSavedConnection();
+    expect(useSettingsStore.getState().savedConnection).toBeNull();
+  });
+
+  it('does not include password in savedConnection', () => {
+    const conn = { host: 'relay.example.com', port: 9001, ssl: true };
+    useSettingsStore.getState().setSavedConnection(conn);
+    const saved = useSettingsStore.getState().savedConnection;
+    expect(saved).not.toHaveProperty('password');
   });
 });

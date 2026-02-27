@@ -8,12 +8,15 @@ interface SettingsStore {
   showJoinPart: boolean;
   mediaPreview: boolean;
   fontSize: number;
+  savedConnection: { host: string; port: number; ssl: boolean } | null;
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
   setShowTimestamps: (show: boolean) => void;
   setTimestampFormat: (format: '12h' | '24h') => void;
   setShowJoinPart: (show: boolean) => void;
   setMediaPreview: (enabled: boolean) => void;
   setFontSize: (size: number) => void;
+  setSavedConnection: (conn: { host: string; port: number; ssl: boolean }) => void;
+  clearSavedConnection: () => void;
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -25,12 +28,15 @@ export const useSettingsStore = create<SettingsStore>()(
       showJoinPart: false,
       mediaPreview: true,
       fontSize: 14,
+      savedConnection: null,
       setTheme: (theme) => set({ theme }),
       setShowTimestamps: (showTimestamps) => set({ showTimestamps }),
       setTimestampFormat: (timestampFormat) => set({ timestampFormat }),
       setShowJoinPart: (showJoinPart) => set({ showJoinPart }),
       setMediaPreview: (mediaPreview) => set({ mediaPreview }),
       setFontSize: (fontSize) => set({ fontSize }),
+      setSavedConnection: (savedConnection) => set({ savedConnection }),
+      clearSavedConnection: () => set({ savedConnection: null }),
     }),
     {
       name: 'relay-settings',
