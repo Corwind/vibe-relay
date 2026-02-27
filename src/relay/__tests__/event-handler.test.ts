@@ -120,20 +120,8 @@ describe('event-handler', () => {
           { name: 'displayed', type: 'chr' },
           { name: 'notify', type: 'int' },
         ],
+        // WeeChat sends lines newest-first; handler reverses to chronological
         entries: [
-          {
-            pointers: ['0xbuf', '0xlines', '0xline1', '0xdata1'],
-            values: {
-              buffer: '0xbuf',
-              date: new Date('2024-01-15T10:00:00Z'),
-              prefix: 'alice',
-              message: 'Hello',
-              highlight: 0,
-              tags_array: tagsArray,
-              displayed: 1,
-              notify: 1,
-            },
-          },
           {
             pointers: ['0xbuf', '0xlines', '0xline2', '0xdata2'],
             values: {
@@ -147,12 +135,26 @@ describe('event-handler', () => {
               notify: 1,
             },
           },
+          {
+            pointers: ['0xbuf', '0xlines', '0xline1', '0xdata1'],
+            values: {
+              buffer: '0xbuf',
+              date: new Date('2024-01-15T10:00:00Z'),
+              prefix: 'alice',
+              message: 'Hello',
+              highlight: 0,
+              tags_array: tagsArray,
+              displayed: 1,
+              notify: 1,
+            },
+          },
         ],
       };
 
       handleEvent(makeHdataMessage('listlines', hdata));
       const msgs = useMessageStore.getState().messages['0xbuf'];
       expect(msgs).toHaveLength(2);
+      // After reversal: oldest first, newest last
       expect(msgs[0].message).toBe('Hello');
       expect(msgs[1].message).toBe('World');
     });

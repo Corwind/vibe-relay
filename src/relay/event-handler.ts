@@ -91,6 +91,8 @@ function handleLineList(objects: ProtocolMessage['objects']): void {
     }
 
     for (const [bufferId, messages] of byBuffer) {
+      // WeeChat returns lines newest-first; reverse to chronological order
+      messages.reverse();
       msgStore.prependMessages(bufferId, messages);
     }
   }
