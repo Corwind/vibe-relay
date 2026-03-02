@@ -9,10 +9,7 @@ interface EmojiPickerProps {
   disabled?: boolean;
 }
 
-export const EmojiPicker = memo(function EmojiPicker({
-  onSelect,
-  disabled,
-}: EmojiPickerProps) {
+export const EmojiPicker = memo(function EmojiPicker({ onSelect, disabled }: EmojiPickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState(0);
@@ -24,9 +21,7 @@ export const EmojiPicker = memo(function EmojiPicker({
     const query = search.toLowerCase().trim();
     return EMOJI_CATEGORIES.map((cat) => ({
       ...cat,
-      emojis: cat.emojis.filter((e) =>
-        e.shortcode.toLowerCase().includes(query),
-      ),
+      emojis: cat.emojis.filter((e) => e.shortcode.toLowerCase().includes(query)),
     })).filter((cat) => cat.emojis.length > 0);
   }, [search]);
 

@@ -65,7 +65,13 @@ function ThemePicker() {
           {currentTheme && <ThemeSwatches theme={currentTheme} />}
           <span>{displayName}</span>
           <svg className="h-3 w-3 opacity-60" viewBox="0 0 12 12" fill="none">
-            <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M3 5l3 3 3-3"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
 
@@ -245,7 +251,8 @@ export const SettingsForm = memo(function SettingsForm() {
           <div className="space-y-3">
             <h3 className="text-sm font-semibold">Connection</h3>
             <p className="text-xs text-muted-foreground">
-              Saved: {savedConnection.host}:{savedConnection.port} ({savedConnection.ssl ? 'SSL' : 'plain'})
+              Saved: {savedConnection.host}:{savedConnection.port} (
+              {savedConnection.ssl ? 'SSL' : 'plain'})
             </p>
             <Button
               variant="outline"

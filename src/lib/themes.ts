@@ -651,10 +651,7 @@ export function getThemeById(id: string): ThemeDefinition | undefined {
  * Resolve a theme ID, handling the special "system" value.
  * Returns the resolved ThemeDefinition.
  */
-export function resolveTheme(
-  themeId: string,
-  systemPrefersDark: boolean,
-): ThemeDefinition {
+export function resolveTheme(themeId: string, systemPrefersDark: boolean): ThemeDefinition {
   if (themeId === 'system') {
     return systemPrefersDark ? defaultDark : defaultLight;
   }

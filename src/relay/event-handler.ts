@@ -329,8 +329,7 @@ function hdataEntryToMessage(
   const plainMessage = messageSegments.map((s) => s.text).join('');
 
   const dateVal = entry.values['date'];
-  const dateMs =
-    dateVal instanceof Date ? dateVal.getTime() : (dateVal as number) * 1000;
+  const dateMs = dateVal instanceof Date ? dateVal.getTime() : (dateVal as number) * 1000;
   const msgHash = simpleHash(plainMessage);
   const stableId = `${bufferPointer}-${dateMs}-${plainPrefix}-${msgHash}`;
 

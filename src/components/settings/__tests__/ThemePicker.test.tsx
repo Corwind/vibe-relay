@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SettingsForm } from '../SettingsForm';
@@ -6,6 +6,11 @@ import { useSettingsStore } from '@/store/settings-store';
 import { themes } from '@/lib/themes';
 
 describe('ThemePicker', () => {
+  let user: ReturnType<typeof userEvent.setup>;
+  beforeAll(() => {
+    user = userEvent.setup();
+  });
+
   beforeEach(() => {
     useSettingsStore.setState({ theme: 'default-dark' });
   });
@@ -25,7 +30,6 @@ describe('ThemePicker', () => {
   });
 
   it('opens dropdown with all themes on click', async () => {
-    const user = userEvent.setup();
     render(<SettingsForm />);
 
     await user.click(screen.getByTestId('theme-select'));
@@ -42,7 +46,6 @@ describe('ThemePicker', () => {
   });
 
   it('lists all themes in the dropdown', async () => {
-    const user = userEvent.setup();
     render(<SettingsForm />);
 
     await user.click(screen.getByTestId('theme-select'));
@@ -53,7 +56,6 @@ describe('ThemePicker', () => {
   });
 
   it('each theme option shows color swatches', async () => {
-    const user = userEvent.setup();
     render(<SettingsForm />);
 
     await user.click(screen.getByTestId('theme-select'));
@@ -64,7 +66,6 @@ describe('ThemePicker', () => {
   });
 
   it('selects a theme when clicked', async () => {
-    const user = userEvent.setup();
     render(<SettingsForm />);
 
     await user.click(screen.getByTestId('theme-select'));
@@ -74,7 +75,6 @@ describe('ThemePicker', () => {
   });
 
   it('closes dropdown after selection', async () => {
-    const user = userEvent.setup();
     render(<SettingsForm />);
 
     await user.click(screen.getByTestId('theme-select'));
@@ -87,7 +87,6 @@ describe('ThemePicker', () => {
 
   it('highlights the currently selected theme', async () => {
     useSettingsStore.setState({ theme: 'monokai' });
-    const user = userEvent.setup();
     render(<SettingsForm />);
 
     await user.click(screen.getByTestId('theme-select'));
@@ -103,7 +102,6 @@ describe('ThemePicker', () => {
   });
 
   it('closes dropdown when clicking outside', async () => {
-    const user = userEvent.setup();
     render(<SettingsForm />);
 
     await user.click(screen.getByTestId('theme-select'));
