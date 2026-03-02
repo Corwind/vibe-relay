@@ -39,10 +39,19 @@ function buildItems(messages: WeechatMessage[]): ListItem[] {
   return items;
 }
 
-function HistoryHeader({ loadingOlder, hasMoreMessages }: { loadingOlder: boolean; hasMoreMessages: boolean }) {
+function HistoryHeader({
+  loadingOlder,
+  hasMoreMessages,
+}: {
+  loadingOlder: boolean;
+  hasMoreMessages: boolean;
+}) {
   if (loadingOlder) {
     return (
-      <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground" data-testid="loading-older">
+      <div
+        className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground"
+        data-testid="loading-older"
+      >
         <Loader2 className="h-3 w-3 animate-spin" />
         Loading older messages...
       </div>
@@ -53,7 +62,9 @@ function HistoryHeader({ loadingOlder, hasMoreMessages }: { loadingOlder: boolea
     return (
       <div className="flex items-center gap-2 py-3 px-4" data-testid="history-start">
         <div className="flex-1 border-t border-border" />
-        <span className="text-xs text-muted-foreground whitespace-nowrap">Beginning of conversation</span>
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          Beginning of conversation
+        </span>
         <div className="flex-1 border-t border-border" />
       </div>
     );
@@ -84,17 +95,21 @@ export const MessageList = memo(function MessageList({ onStartReached }: Message
     return <MessageItem message={item.message} />;
   }, []);
 
-  const Header = useCallback(() => (
-    <HistoryHeader loadingOlder={loadingOlder} hasMoreMessages={hasMoreMessages} />
-  ), [loadingOlder, hasMoreMessages]);
+  const Header = useCallback(
+    () => <HistoryHeader loadingOlder={loadingOlder} hasMoreMessages={hasMoreMessages} />,
+    [loadingOlder, hasMoreMessages],
+  );
 
   // Use atTopStateChange for reliable scroll-to-top detection.
   // startReached can miss re-fires after prepending items with alignToBottom.
-  const handleAtTopStateChange = useCallback((atTop: boolean) => {
-    if (atTop) {
-      onStartReached?.();
-    }
-  }, [onStartReached]);
+  const handleAtTopStateChange = useCallback(
+    (atTop: boolean) => {
+      if (atTop) {
+        onStartReached?.();
+      }
+    },
+    [onStartReached],
+  );
 
   if (messages.length === 0) {
     return (

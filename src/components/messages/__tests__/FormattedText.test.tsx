@@ -120,9 +120,7 @@ describe('FormattedText', () => {
   });
 
   it('preserves color formatting with emoji content', () => {
-    const spans: TextSpan[] = [
-      { text: ':heart:', fgColor: '#ff0000' },
-    ];
+    const spans: TextSpan[] = [{ text: ':heart:', fgColor: '#ff0000' }];
 
     const { container } = render(<FormattedText spans={spans} />);
 

@@ -19,10 +19,7 @@ function trimToLimit(messages: WeechatMessage[]): WeechatMessage[] {
   return messages;
 }
 
-function deduplicate(
-  existing: WeechatMessage[],
-  incoming: WeechatMessage[],
-): WeechatMessage[] {
+function deduplicate(existing: WeechatMessage[], incoming: WeechatMessage[]): WeechatMessage[] {
   const seen = new Set(existing.map((m) => m.id));
   return incoming.filter((m) => !seen.has(m.id));
 }

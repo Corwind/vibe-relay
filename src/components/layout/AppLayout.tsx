@@ -1,5 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Panel, Group as PanelGroup, Separator as PanelResizeHandle, useDefaultLayout } from 'react-resizable-panels';
+import {
+  Panel,
+  Group as PanelGroup,
+  Separator as PanelResizeHandle,
+  useDefaultLayout,
+} from 'react-resizable-panels';
 import { BufferList } from '@/components/buffers/BufferList';
 import { MessageList } from '@/components/messages/MessageList';
 import { NickList } from '@/components/nicklist/NickList';
@@ -125,7 +130,12 @@ export function AppLayout() {
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between p-3">
         <h1 className="text-sm font-bold">vibe-relay</h1>
-        <Button size="icon" variant="ghost" onClick={() => setSettingsOpen(true)} aria-label="Settings">
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => setSettingsOpen(true)}
+          aria-label="Settings"
+        >
           <Settings className="h-4 w-4" />
         </Button>
       </div>
@@ -173,7 +183,9 @@ export function AppLayout() {
               <div className="flex items-center gap-2 border-b border-border px-4 py-2">
                 <h2 className="font-medium text-sm">{activeBuffer.shortName}</h2>
                 {activeBuffer.title && (
-                  <span className="text-xs text-muted-foreground truncate">{activeBuffer.title}</span>
+                  <span className="text-xs text-muted-foreground truncate">
+                    {activeBuffer.title}
+                  </span>
                 )}
               </div>
             )}

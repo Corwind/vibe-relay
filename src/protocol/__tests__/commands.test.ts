@@ -55,9 +55,7 @@ describe('commands', () => {
     });
 
     it('builds init with totp', () => {
-      expect(init('password=mypassword', '123456')).toBe(
-        'init password=mypassword,totp=123456\n',
-      );
+      expect(init('password=mypassword', '123456')).toBe('init password=mypassword,totp=123456\n');
     });
   });
 

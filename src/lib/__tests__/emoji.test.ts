@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  resolveEmojis,
-  splitTextWithEmojis,
-  EMOJI_SHORTCODES,
-  EMOJI_CATEGORIES,
-} from '../emoji';
+import { resolveEmojis, splitTextWithEmojis, EMOJI_SHORTCODES, EMOJI_CATEGORIES } from '../emoji';
 
 describe('resolveEmojis', () => {
   it('replaces known shortcodes with unicode', () => {
@@ -22,9 +17,7 @@ describe('resolveEmojis', () => {
   });
 
   it('handles multiple shortcodes', () => {
-    expect(resolveEmojis(':smile: and :heart:')).toBe(
-      '\u{1F604} and \u{2764}\u{FE0F}',
-    );
+    expect(resolveEmojis(':smile: and :heart:')).toBe('\u{1F604} and \u{2764}\u{FE0F}');
   });
 
   it('does not match colons inside URLs', () => {
@@ -52,9 +45,7 @@ describe('resolveEmojis', () => {
   });
 
   it('handles shortcodes at start and end of text', () => {
-    expect(resolveEmojis(':smile:text:heart:')).toBe(
-      '\u{1F604}text\u{2764}\u{FE0F}',
-    );
+    expect(resolveEmojis(':smile:text:heart:')).toBe('\u{1F604}text\u{2764}\u{FE0F}');
   });
 
   it('handles plus shortcodes like :+1:', () => {

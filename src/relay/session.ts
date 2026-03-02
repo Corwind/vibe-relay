@@ -119,7 +119,9 @@ export class RelaySession {
     try {
       const clientNonce = generateClientNonce();
       const iterations = selectedAlgo.startsWith('pbkdf2')
-        ? (serverIterations ? parseInt(serverIterations, 10) : 100000)
+        ? serverIterations
+          ? parseInt(serverIterations, 10)
+          : 100000
         : undefined;
       const hash = await computeHash(
         selectedAlgo,
@@ -175,11 +177,7 @@ export class RelaySession {
 
     // Fetch hotlist for unread counts
     this.connection.send(
-      commands.hdata(
-        'hotlist:gui_hotlist(*)',
-        ['buffer', 'count'],
-        'listhotlist',
-      ),
+      commands.hdata('hotlist:gui_hotlist(*)', ['buffer', 'count'], 'listhotlist'),
     );
 
     // Sync all events
