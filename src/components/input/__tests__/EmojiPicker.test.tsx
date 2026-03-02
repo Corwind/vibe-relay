@@ -1,9 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { EmojiPicker } from '../EmojiPicker';
 
 describe('EmojiPicker', () => {
+  let user: ReturnType<typeof userEvent.setup>;
+  beforeAll(() => {
+    user = userEvent.setup();
+  });
+
   it('renders the trigger button', () => {
     render(<EmojiPicker onSelect={vi.fn()} />);
     expect(screen.getByTestId('emoji-picker-trigger')).toBeInTheDocument();
@@ -11,7 +16,6 @@ describe('EmojiPicker', () => {
   });
 
   it('opens popover on click', async () => {
-    const user = userEvent.setup();
     render(<EmojiPicker onSelect={vi.fn()} />);
 
     await user.click(screen.getByTestId('emoji-picker-trigger'));
@@ -23,7 +27,6 @@ describe('EmojiPicker', () => {
 
   it('calls onSelect when an emoji is clicked', async () => {
     const onSelect = vi.fn();
-    const user = userEvent.setup();
     render(<EmojiPicker onSelect={onSelect} />);
 
     await user.click(screen.getByTestId('emoji-picker-trigger'));
@@ -38,11 +41,11 @@ describe('EmojiPicker', () => {
   });
 
   it('filters emojis when searching', async () => {
-    const user = userEvent.setup();
     render(<EmojiPicker onSelect={vi.fn()} />);
 
     await user.click(screen.getByTestId('emoji-picker-trigger'));
-    await user.type(screen.getByTestId('emoji-search-input'), 'rocket');
+    await user.click(screen.getByTestId('emoji-search-input'));
+    await user.paste('rocket');
 
     const grid = screen.getByTestId('emoji-grid');
     const buttons = grid.querySelectorAll('button');
@@ -54,11 +57,11 @@ describe('EmojiPicker', () => {
   });
 
   it('shows no results message for unknown search', async () => {
-    const user = userEvent.setup();
     render(<EmojiPicker onSelect={vi.fn()} />);
 
     await user.click(screen.getByTestId('emoji-picker-trigger'));
-    await user.type(screen.getByTestId('emoji-search-input'), 'xyznotfound');
+    await user.click(screen.getByTestId('emoji-search-input'));
+    await user.paste('xyznotfound');
 
     expect(screen.getByText('No emojis found')).toBeInTheDocument();
   });
@@ -69,7 +72,6 @@ describe('EmojiPicker', () => {
   });
 
   it('renders category tabs', async () => {
-    const user = userEvent.setup();
     render(<EmojiPicker onSelect={vi.fn()} />);
 
     await user.click(screen.getByTestId('emoji-picker-trigger'));
@@ -80,7 +82,6 @@ describe('EmojiPicker', () => {
   });
 
   it('switches category on tab click', async () => {
-    const user = userEvent.setup();
     render(<EmojiPicker onSelect={vi.fn()} />);
 
     await user.click(screen.getByTestId('emoji-picker-trigger'));

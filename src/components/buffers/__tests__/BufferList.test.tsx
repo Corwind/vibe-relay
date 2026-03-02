@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BufferList } from '../BufferList';
@@ -24,6 +24,11 @@ function makeBuffer(overrides: Partial<WeechatBuffer> = {}): WeechatBuffer {
 }
 
 describe('BufferList', () => {
+  let user: ReturnType<typeof userEvent.setup>;
+  beforeAll(() => {
+    user = userEvent.setup();
+  });
+
   beforeEach(() => {
     useBufferStore.setState({
       buffers: {},
@@ -54,7 +59,6 @@ describe('BufferList', () => {
   });
 
   it('filters buffers by search input', async () => {
-    const user = userEvent.setup();
     const buffers = {
       buf1: makeBuffer({ id: 'buf1', shortName: '#react', number: 1 }),
       buf2: makeBuffer({ id: 'buf2', shortName: '#vue', number: 2 }),
@@ -65,14 +69,14 @@ describe('BufferList', () => {
     render(<BufferList />);
 
     const searchInput = screen.getByTestId('buffer-search');
-    await user.type(searchInput, 'react');
+    await user.click(searchInput);
+    await user.paste('react');
 
     expect(screen.getAllByTestId('buffer-item')).toHaveLength(1);
     expect(screen.getByText('#react')).toBeInTheDocument();
   });
 
   it('shows no matching buffers message when filter has no results', async () => {
-    const user = userEvent.setup();
     const buffers = {
       buf1: makeBuffer({ id: 'buf1', shortName: '#test', number: 1 }),
     };
@@ -81,7 +85,8 @@ describe('BufferList', () => {
     render(<BufferList />);
 
     const searchInput = screen.getByTestId('buffer-search');
-    await user.type(searchInput, 'nonexistent');
+    await user.click(searchInput);
+    await user.paste('nonexistent');
 
     expect(screen.getByText('No matching buffers')).toBeInTheDocument();
   });
@@ -115,7 +120,6 @@ describe('BufferList', () => {
   });
 
   it('sets active buffer on click', async () => {
-    const user = userEvent.setup();
     const buffers = {
       buf1: makeBuffer({ id: 'buf1', shortName: '#test' }),
     };

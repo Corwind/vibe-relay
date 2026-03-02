@@ -1,10 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConnectDialog } from '../ConnectDialog';
 import { useSettingsStore } from '@/store/settings-store';
 
 describe('ConnectDialog', () => {
+  let user: ReturnType<typeof userEvent.setup>;
+  beforeAll(() => {
+    user = userEvent.setup();
+  });
   const defaultProps = {
     open: true,
     onOpenChange: vi.fn(),
@@ -26,7 +30,6 @@ describe('ConnectDialog', () => {
   });
 
   it('shows validation errors on empty submit', async () => {
-    const user = userEvent.setup();
     render(<ConnectDialog {...defaultProps} />);
 
     await user.click(screen.getByTestId('connect-button'));
@@ -37,14 +40,15 @@ describe('ConnectDialog', () => {
   });
 
   it('calls onConnect with settings when form is valid', async () => {
-    const user = userEvent.setup();
     const onConnect = vi.fn();
     render(<ConnectDialog {...defaultProps} onConnect={onConnect} />);
 
-    await user.type(screen.getByTestId('host-input'), 'relay.example.com');
+    await user.click(screen.getByTestId('host-input'));
+    await user.paste('relay.example.com');
     await user.clear(screen.getByTestId('port-input'));
     await user.type(screen.getByTestId('port-input'), '9001');
-    await user.type(screen.getByTestId('password-input'), 'secret');
+    await user.click(screen.getByTestId('password-input'));
+    await user.paste('secret');
     await user.click(screen.getByTestId('connect-button'));
 
     expect(onConnect).toHaveBeenCalledWith({
@@ -56,12 +60,13 @@ describe('ConnectDialog', () => {
   });
 
   it('submits with SSL disabled when unchecked', async () => {
-    const user = userEvent.setup();
     const onConnect = vi.fn();
     render(<ConnectDialog {...defaultProps} onConnect={onConnect} />);
 
-    await user.type(screen.getByTestId('host-input'), 'localhost');
-    await user.type(screen.getByTestId('password-input'), 'pass');
+    await user.click(screen.getByTestId('host-input'));
+    await user.paste('localhost');
+    await user.click(screen.getByTestId('password-input'));
+    await user.paste('pass');
     await user.click(screen.getByTestId('ssl-checkbox'));
     await user.click(screen.getByTestId('connect-button'));
 
@@ -69,13 +74,14 @@ describe('ConnectDialog', () => {
   });
 
   it('validates port range', async () => {
-    const user = userEvent.setup();
     render(<ConnectDialog {...defaultProps} />);
 
-    await user.type(screen.getByTestId('host-input'), 'localhost');
+    await user.click(screen.getByTestId('host-input'));
+    await user.paste('localhost');
     await user.clear(screen.getByTestId('port-input'));
     await user.type(screen.getByTestId('port-input'), 'abc');
-    await user.type(screen.getByTestId('password-input'), 'pass');
+    await user.click(screen.getByTestId('password-input'));
+    await user.paste('pass');
     await user.click(screen.getByTestId('connect-button'));
 
     expect(screen.getByTestId('port-error')).toHaveTextContent('Port must be 1-65535');
