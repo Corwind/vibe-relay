@@ -1,4 +1,4 @@
-import { useCallback, useRef, useMemo, memo } from 'react';
+import { useCallback, useRef, useMemo, useState, memo } from 'react';
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { useMessages } from '@/hooks/use-messages';
 import { useHistoryState } from '@/hooks/use-history-state';
@@ -11,6 +11,10 @@ import type { WeechatMessage } from '@/store/types';
  * Large initial value for Virtuoso's firstItemIndex.
  * When items are prepended, we decrease this value so Virtuoso
  * maintains the user's scroll position correctly.
+ *
+ * IMPORTANT: firstItemIndex must only change for prepends, not appends.
+ * Decreasing it on append tricks Virtuoso into a scroll-position adjustment
+ * that fights followOutput and causes the viewport to jump.
  */
 const FIRST_ITEM_INDEX_BASE = 100_000;
 
@@ -84,9 +88,29 @@ export const MessageList = memo(function MessageList({ onStartReached }: Message
 
   const items = useMemo(() => buildItems(messages), [messages]);
 
-  // Shift firstItemIndex down as items grow so Virtuoso keeps scroll position
-  // when messages are prepended at the top.
-  const firstItemIndex = Math.max(0, FIRST_ITEM_INDEX_BASE - items.length);
+  // Track firstItemIndex via state so it only decreases for prepends.
+  // Uses the React pattern of updating state during render to derive
+  // values from previous props (https://react.dev/reference/react/useState#storing-information-from-previous-renders).
+  const [prevItemsLength, setPrevItemsLength] = useState(0);
+  const [prevFirstMsgId, setPrevFirstMsgId] = useState<string | null>(null);
+  const [firstItemIndex, setFirstItemIndex] = useState(FIRST_ITEM_INDEX_BASE);
+
+  const firstMsgId = messages.length > 0 ? messages[0].id : null;
+
+  if (items.length !== prevItemsLength || firstMsgId !== prevFirstMsgId) {
+    setPrevItemsLength(items.length);
+    setPrevFirstMsgId(firstMsgId);
+
+    if (items.length > 0 && prevItemsLength === 0) {
+      // Initial load or buffer switch: set base index
+      setFirstItemIndex(Math.max(0, FIRST_ITEM_INDEX_BASE - items.length));
+    } else if (items.length > prevItemsLength && firstMsgId !== prevFirstMsgId) {
+      // First message changed while items grew -> prepend
+      const delta = items.length - prevItemsLength;
+      setFirstItemIndex((prev) => Math.max(0, prev - delta));
+    }
+    // Appends (first message unchanged): firstItemIndex stays the same
+  }
 
   const renderItem = useCallback((_index: number, item: ListItem) => {
     if (item.type === 'divider') {
