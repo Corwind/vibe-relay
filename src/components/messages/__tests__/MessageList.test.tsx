@@ -6,20 +6,26 @@ import { useMessageStore } from '@/store/message-store';
 import { useHistoryStore } from '@/store/history-store';
 import type { WeechatMessage } from '@/store/types';
 
+// Track firstItemIndex values across renders for scroll-position assertions
+let capturedFirstItemIndex: number | undefined;
+
 // Mock react-virtuoso since it requires DOM measurements
 vi.mock('react-virtuoso', () => ({
   Virtuoso: ({
     data,
     itemContent,
     atTopStateChange,
+    firstItemIndex,
     components,
   }: {
     data: unknown[];
     itemContent: (index: number, item: unknown) => React.ReactNode;
     atTopStateChange?: (atTop: boolean) => void;
+    firstItemIndex?: number;
     components?: { Header?: React.ComponentType };
     [key: string]: unknown;
   }) => {
+    capturedFirstItemIndex = firstItemIndex;
     const HeaderComponent = components?.Header;
     return (
       <div data-testid="virtuoso-mock">
@@ -117,5 +123,37 @@ describe('MessageList', () => {
     render(<MessageList />);
     expect(screen.queryByTestId('loading-older')).not.toBeInTheDocument();
     expect(screen.queryByTestId('history-start')).not.toBeInTheDocument();
+  });
+
+  it('does not change firstItemIndex when messages are appended', () => {
+    const initial = [makeMessage('1', 'hello'), makeMessage('2', 'world')];
+    useMessageStore.setState({ messages: { buf1: initial } });
+
+    const { rerender } = render(<MessageList />);
+    const indexAfterInitial = capturedFirstItemIndex!;
+
+    // Append a new message (simulates receiving a new message in the channel)
+    useMessageStore.setState({
+      messages: { buf1: [...initial, makeMessage('3', 'new message')] },
+    });
+    rerender(<MessageList />);
+
+    expect(capturedFirstItemIndex).toBe(indexAfterInitial);
+  });
+
+  it('decreases firstItemIndex when messages are prepended', () => {
+    const initial = [makeMessage('2', 'hello'), makeMessage('3', 'world')];
+    useMessageStore.setState({ messages: { buf1: initial } });
+
+    const { rerender } = render(<MessageList />);
+    const indexAfterInitial = capturedFirstItemIndex!;
+
+    // Prepend older messages (simulates loading history)
+    useMessageStore.setState({
+      messages: { buf1: [makeMessage('1', 'older'), ...initial] },
+    });
+    rerender(<MessageList />);
+
+    expect(capturedFirstItemIndex).toBeLessThan(indexAfterInitial);
   });
 });
